@@ -1,9 +1,18 @@
 import { recordSet, recordAppend, setCompletion } from './mutations.js';
 import { Parser } from 'htmlparser2';
 import { XmlExtractor } from './xml.js';
-import type { ElementNode, MarkupDocument, MarkupNode, MutableSnapshot, TextNode } from './types.js';
+import type {
+  ElementNode,
+  MarkupDocument,
+  MarkupNode,
+  MutableSnapshot,
+  TextNode,
+} from './types.js';
 
-type TreeEntry<Node extends MarkupNode | MarkupDocument = ElementNode | MarkupDocument> = { node: Node; path: string };
+type TreeEntry<Node extends MarkupNode | MarkupDocument = ElementNode | MarkupDocument> = {
+  node: Node;
+  path: string;
+};
 
 /** Preserve elements, attributes and ordered mixed text instead of flattening markup. */
 export class MarkupMachine {
@@ -11,7 +20,10 @@ export class MarkupMachine {
   private lastText: TreeEntry<TextNode> | null;
   private readonly parser: Parser | XmlExtractor;
 
-  constructor(private readonly current: MutableSnapshot, private readonly maxDepth: number) {
+  constructor(
+    private readonly current: MutableSnapshot,
+    private readonly maxDepth: number,
+  ) {
     const document: MarkupDocument = { kind: 'document', children: [] };
     this.current.data = document;
     setCompletion(this.current, '', 'partial');
@@ -21,22 +33,33 @@ export class MarkupMachine {
       this.parser = new XmlExtractor({
         open: (name, attributes) => this.open(name, attributes),
         close: () => this.close(),
-        text: text => this.text(text),
+        text: (text) => this.text(text),
         boundary: () => this.closeText(),
       });
     } else {
       let attributes: Record<string, string> = {};
-      this.parser = new Parser({
-        // The aggregate htmlparser2 attributes object loses __proto__ keys.
-        onattribute: (name, value) => {
-          if (!Object.hasOwn(attributes, name)) Object.defineProperty(attributes, name, { value, enumerable: true, configurable: true });
+      this.parser = new Parser(
+        {
+          // The aggregate htmlparser2 attributes object loses __proto__ keys.
+          onattribute: (name, value) => {
+            if (!Object.hasOwn(attributes, name))
+              Object.defineProperty(attributes, name, {
+                value,
+                enumerable: true,
+                configurable: true,
+              });
+          },
+          onopentag: (name) => {
+            this.open(name, attributes);
+            attributes = {};
+          },
+          ontext: (text) => this.text(text),
+          onclosetag: () => this.close(),
+          oncomment: () => this.closeText(),
+          onprocessinginstruction: () => this.closeText(),
         },
-        onopentag: name => { this.open(name, attributes); attributes = {}; },
-        ontext: text => this.text(text),
-        onclosetag: () => this.close(),
-        oncomment: () => this.closeText(),
-        onprocessinginstruction: () => this.closeText(),
-      }, { decodeEntities: true });
+        { decodeEntities: true },
+      );
     }
   }
 
@@ -46,7 +69,11 @@ export class MarkupMachine {
     const entry = this.append({ kind: 'element', name, attributes, children: [] });
     this.stack.push(entry);
     for (const key of Object.keys(attributes)) {
-      setCompletion(this.current, `${entry.path}/attributes/${key.replaceAll('~', '~0').replaceAll('/', '~1')}`, 'complete');
+      setCompletion(
+        this.current,
+        `${entry.path}/attributes/${key.replaceAll('~', '~0').replaceAll('/', '~1')}`,
+        'complete',
+      );
     }
   }
 
@@ -67,8 +94,10 @@ export class MarkupMachine {
 
   private text(value: string): void {
     if (!value) return;
-    if (this.lastText) { this.lastText.node.value += value; recordAppend(this.current, `${this.lastText.path}/value`, value); }
-    else this.lastText = this.append({ kind: 'text', value });
+    if (this.lastText) {
+      this.lastText.node.value += value;
+      recordAppend(this.current, `${this.lastText.path}/value`, value);
+    } else this.lastText = this.append({ kind: 'text', value });
   }
 
   private closeText(): void {
@@ -76,7 +105,9 @@ export class MarkupMachine {
     this.lastText = null;
   }
 
-  write(chunk: string): void { this.parser.write(chunk); }
+  write(chunk: string): void {
+    this.parser.write(chunk);
+  }
 
   end(): void {
     this.parser.end();

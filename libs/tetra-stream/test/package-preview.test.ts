@@ -11,7 +11,10 @@ function fixture() {
   const downloads = join(workspace, 'apps/playground/public/downloads');
   mkdirSync(library, { recursive: true });
   mkdirSync(downloads, { recursive: true });
-  writeFileSync(join(library, 'package.json'), JSON.stringify({ name: 'tetra-stream', version: '3.2.1' }));
+  writeFileSync(
+    join(library, 'package.json'),
+    JSON.stringify({ name: 'tetra-stream', version: '3.2.1' }),
+  );
   writeFileSync(join(library, 'README.md'), 'A package fixture.\n');
   return { workspace, library, preview: join(downloads, 'tetra-stream.tgz') };
 }
@@ -37,7 +40,10 @@ test('failed npm packing preserves the prior working preview', () => {
     // without a network dependency or an executable test double.
     const manifest: unknown = JSON.parse(readFileSync(join(library, 'package.json'), 'utf8'));
     assert.ok(manifest && typeof manifest === 'object');
-    writeFileSync(join(library, 'package.json'), JSON.stringify({ ...manifest, scripts: { prepack: 'exit 23' } }));
+    writeFileSync(
+      join(library, 'package.json'),
+      JSON.stringify({ ...manifest, scripts: { prepack: 'exit 23' } }),
+    );
     assert.notEqual(packLibrary(workspace), 0);
     assert.equal(readFileSync(preview, 'utf8'), 'previous preview');
   } finally {

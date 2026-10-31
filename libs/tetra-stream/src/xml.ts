@@ -34,11 +34,19 @@ export class XmlExtractor {
     this.version = '1.0';
     this.offset = 0;
     this.parser = new SaxesParser({ xmlns: true });
-    this.parser.on('error', error => { throw new SyntaxError(error.message); });
-    this.parser.on('doctype', () => { throw new SyntaxError('DTD declarations are unsupported'); });
-    this.parser.on('xmldecl', declaration => { this.version = declaration.version ?? '1.0'; });
-    this.parser.on('opentag', tag => {
-      const attributes = Object.fromEntries(Object.values(tag.attributes).map(attribute => [attribute.name, attribute.value]));
+    this.parser.on('error', (error) => {
+      throw new SyntaxError(error.message);
+    });
+    this.parser.on('doctype', () => {
+      throw new SyntaxError('DTD declarations are unsupported');
+    });
+    this.parser.on('xmldecl', (declaration) => {
+      this.version = declaration.version ?? '1.0';
+    });
+    this.parser.on('opentag', (tag) => {
+      const attributes = Object.fromEntries(
+        Object.values(tag.attributes).map((attribute) => [attribute.name, attribute.value]),
+      );
       events.open(tag.name, attributes);
     });
     this.parser.on('closetag', () => events.close());
@@ -47,7 +55,10 @@ export class XmlExtractor {
   private literal(char: string): void {
     const xml11 = this.version === '1.1';
     const pairedNewline = char === '\n' || (xml11 && char === '\u0085');
-    if (this.previousCR && pairedNewline) { this.previousCR = false; return; }
+    if (this.previousCR && pairedNewline) {
+      this.previousCR = false;
+      return;
+    }
     this.previousCR = char === '\r';
     const newline = char === '\r' || (xml11 && (char === '\u0085' || char === '\u2028'));
     this.events.text(newline ? '\n' : char);
@@ -59,8 +70,11 @@ export class XmlExtractor {
         this.entity += char;
         if (char === ';') {
           const body = this.entity.slice(1, -1);
-          const value = body.startsWith('#x') ? String.fromCodePoint(parseInt(body.slice(2), 16))
-            : body.startsWith('#') ? String.fromCodePoint(parseInt(body.slice(1), 10)) : namedEntities[body];
+          const value = body.startsWith('#x')
+            ? String.fromCodePoint(parseInt(body.slice(2), 16))
+            : body.startsWith('#')
+              ? String.fromCodePoint(parseInt(body.slice(1), 10))
+              : namedEntities[body];
           // Validation checks references first. Character references bypass
           // literal whitespace normalization (e.g. &#13; stays CR).
           this.events.text(value);
@@ -80,10 +94,16 @@ export class XmlExtractor {
 
     if (this.mode === 'opening') {
       this.buffer += char;
-      if (this.buffer === '<!--') { this.mode = 'comment'; this.buffer = ''; }
-      else if (this.buffer === '<![CDATA[') { this.mode = 'cdata'; this.buffer = ''; }
-      else if (this.buffer === '<?') { this.mode = 'pi'; this.buffer = ''; }
-      else if (!openings.some(opening => opening.startsWith(this.buffer))) {
+      if (this.buffer === '<!--') {
+        this.mode = 'comment';
+        this.buffer = '';
+      } else if (this.buffer === '<![CDATA[') {
+        this.mode = 'cdata';
+        this.buffer = '';
+      } else if (this.buffer === '<?') {
+        this.mode = 'pi';
+        this.buffer = '';
+      } else if (!openings.some((opening) => opening.startsWith(this.buffer))) {
         this.mode = 'tag';
         this.buffer = '';
       }
@@ -91,8 +111,9 @@ export class XmlExtractor {
     }
 
     if (this.mode === 'tag') {
-      if (this.quote) { if (char === this.quote) this.quote = null; }
-      else if (char === '"' || char === "'") this.quote = char;
+      if (this.quote) {
+        if (char === this.quote) this.quote = null;
+      } else if (char === '"' || char === "'") this.quote = char;
       else if (char === '>') this.mode = 'text';
       return;
     }
@@ -116,7 +137,10 @@ export class XmlExtractor {
 
     const ending = this.mode === 'comment' ? '-->' : '?>';
     this.buffer = (this.buffer + char).slice(-ending.length);
-    if (this.buffer === ending) { this.mode = 'text'; this.buffer = ''; }
+    if (this.buffer === ending) {
+      this.mode = 'text';
+      this.buffer = '';
+    }
   }
 
   write(chunk: string): void {
@@ -129,5 +153,7 @@ export class XmlExtractor {
     }
   }
 
-  end(): void { this.parser.close(); }
+  end(): void {
+    this.parser.close();
+  }
 }

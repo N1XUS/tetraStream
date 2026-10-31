@@ -1,13 +1,30 @@
 import type { Completion, Snapshot } from 'tetra-stream';
 
 export type GridCellStatus = Completion | 'missing' | 'pending';
-export interface GridColumn { id: string; label: string; status: Completion | 'missing' }
-export interface GridCell { columnId: string; value: string | undefined; status: GridCellStatus }
-export interface GridRow { id: string; index: number; status: Completion; cells: GridCell[] }
-export interface CsvGrid { columns: GridColumn[]; rows: GridRow[]; completeRows: number }
+export interface GridColumn {
+  id: string;
+  label: string;
+  status: Completion | 'missing';
+}
+export interface GridCell {
+  columnId: string;
+  value: string | undefined;
+  status: GridCellStatus;
+}
+export interface GridRow {
+  id: string;
+  index: number;
+  status: Completion;
+  cells: GridCell[];
+}
+export interface CsvGrid {
+  columns: GridColumn[];
+  rows: GridRow[];
+  completeRows: number;
+}
 
 function isStringRow(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every(cell => typeof cell === 'string');
+  return Array.isArray(value) && value.every((cell) => typeof cell === 'string');
 }
 
 /** A separate dataset: quoted commas, quotes, and a multiline field are intentional. */
@@ -40,9 +57,11 @@ export function readCsvGrid(snapshot: Snapshot<unknown>): CsvGrid {
       cells: columns.map((column, cell) => ({
         columnId: column.id,
         value: row[cell],
-        status: snapshot.status[`/${sourceIndex}/${cell}`] ?? (status === 'complete' ? 'missing' : 'pending'),
+        status:
+          snapshot.status[`/${sourceIndex}/${cell}`] ??
+          (status === 'complete' ? 'missing' : 'pending'),
       })),
     };
   });
-  return { columns, rows, completeRows: rows.filter(row => row.status === 'complete').length };
+  return { columns, rows, completeRows: rows.filter((row) => row.status === 'complete').length };
 }

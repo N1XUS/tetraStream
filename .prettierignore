@@ -1,0 +1,10 @@
+node_modules/
+dist/
+**/dist/
+.nx/
+**/.rivet/
+**/.wrangler/
+artifacts/
+coverage/
+docs/superpowers/
+apps/playground/public/downloads/

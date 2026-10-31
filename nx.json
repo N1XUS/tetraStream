@@ -4,48 +4,28 @@
   "plugins": [
     {
       "plugin": "@rivetjs/nx/plugin",
-      "include": [
-        "apps/playground/**"
-      ]
+      "include": ["apps/playground/**"]
     }
   ],
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "!{projectRoot}/dist/**/*",
-      "sharedGlobals"
-    ],
-    "production": [
-      "default",
-      "!{projectRoot}/test/**/*"
-    ],
-    "sharedGlobals": [
-      "{workspaceRoot}/package-lock.json",
-      "{workspaceRoot}/tsconfig.base.json"
-    ]
+    "default": ["{projectRoot}/**/*", "!{projectRoot}/dist/**/*", "sharedGlobals"],
+    "production": ["default", "!{projectRoot}/test/**/*"],
+    "sharedGlobals": ["{workspaceRoot}/package-lock.json", "{workspaceRoot}/tsconfig.base.json"]
   },
   "targetDefaults": {
     "build": {
       "cache": true,
-      "inputs": [
-        "production",
-        "^production"
-      ]
+      "inputs": ["production", "^production"]
     },
     "test": {
       "cache": true,
-      "inputs": [
-        "default",
-        "^production"
-      ]
+      "inputs": ["default", "^production"]
     },
     "typecheck": {
       "cache": true
     },
     "nx-release-publish": {
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "options": {
         "packageRoot": "libs/tetra-stream",
         "access": "public"
@@ -53,18 +33,14 @@
     }
   },
   "release": {
-    "projects": [
-      "tetra-stream"
-    ],
+    "projects": ["tetra-stream"],
     "projectsRelationship": "independent",
     "releaseTag": {
       "pattern": "{projectName}@{version}"
     },
     "version": {
       "currentVersionResolver": "disk",
-      "manifestRootsToUpdate": [
-        "{projectRoot}"
-      ]
+      "manifestRootsToUpdate": ["{projectRoot}"]
     },
     "changelog": {
       "workspaceChangelog": false,

@@ -2,5 +2,5 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "tetrastream",
   "workers_dev": true,
-  "routes": [{ "pattern": "tetrastream.severyn.pro", "custom_domain": true }]
+  "routes": [{ "pattern": "tetrastream.severyn.pro", "custom_domain": true }],
 }

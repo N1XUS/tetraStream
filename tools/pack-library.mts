@@ -9,14 +9,22 @@ const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export function packLibrary(workspace: string = workspaceRoot): number {
   const library = join(workspace, 'libs/tetra-stream');
   const manifest: unknown = JSON.parse(readFileSync(join(library, 'package.json'), 'utf8'));
-  if (!manifest || typeof manifest !== 'object' || !('name' in manifest) || typeof manifest.name !== 'string'
-    || !('version' in manifest) || typeof manifest.version !== 'string') {
+  if (
+    !manifest ||
+    typeof manifest !== 'object' ||
+    !('name' in manifest) ||
+    typeof manifest.name !== 'string' ||
+    !('version' in manifest) ||
+    typeof manifest.version !== 'string'
+  ) {
     throw new TypeError('The library manifest must declare its package name and version');
   }
   const artifacts = join(workspace, 'artifacts');
   mkdirSync(artifacts, { recursive: true });
   const result = spawnSync('npm', ['pack', library, '--pack-destination', artifacts], {
-    cwd: workspace, stdio: 'inherit', shell: process.platform === 'win32',
+    cwd: workspace,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
   });
   if (result.error) throw result.error;
   if (result.status !== 0) return result.status ?? 1;

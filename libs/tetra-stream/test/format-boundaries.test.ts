@@ -4,12 +4,41 @@ import type { FormatName as Format, JSONValue } from '../dist/index.js';
 import { StreamNormalizer } from '../dist/index.js';
 
 const cases: [Format, string, JSONValue][] = [
-  ['yaml', 'name: Alice\nbio: "Café\\u0020海"\nskills:\n  - Design\n  - Coding\nactive: false\nage: 25\nempty: null', { name: 'Alice', bio: 'Café 海', skills: ['Design', 'Coding'], active: false, age: 25, empty: null }],
-  ['yml', "user: {name: 'Alice''s', skills: [Design, Coding]}\nbio: |\n  Hello\n  world\n", { user: { name: "Alice's", skills: ['Design', 'Coding'] }, bio: 'Hello\nworld\n' }],
+  [
+    'yaml',
+    'name: Alice\nbio: "Café\\u0020海"\nskills:\n  - Design\n  - Coding\nactive: false\nage: 25\nempty: null',
+    {
+      name: 'Alice',
+      bio: 'Café 海',
+      skills: ['Design', 'Coding'],
+      active: false,
+      age: 25,
+      empty: null,
+    },
+  ],
+  [
+    'yml',
+    "user: {name: 'Alice''s', skills: [Design, Coding]}\nbio: |\n  Hello\n  world\n",
+    { user: { name: "Alice's", skills: ['Design', 'Coding'] }, bio: 'Hello\nworld\n' },
+  ],
   ['yaml', '- "Alice"\n- {bio: simple}\n- null\n', ['Alice', { bio: 'simple' }, null]],
   ['ndjson', '\n{"name":"海🌊"}\r\nfalse\n[1,2]\n', [{ name: '海🌊' }, false, [1, 2]]],
-  ['csv', '\uFEFFname,bio,empty\r\n"Alice""s","Hello,\r\nworld",\r\n', [['name', 'bio', 'empty'], ['Alice"s', 'Hello,\r\nworld', '']]],
-  ['tsv', 'name\tbio\nAlice\t"Hello\tworld"', [['name', 'bio'], ['Alice', 'Hello\tworld']]],
+  [
+    'csv',
+    '\uFEFFname,bio,empty\r\n"Alice""s","Hello,\r\nworld",\r\n',
+    [
+      ['name', 'bio', 'empty'],
+      ['Alice"s', 'Hello,\r\nworld', ''],
+    ],
+  ],
+  [
+    'tsv',
+    'name\tbio\nAlice\t"Hello\tworld"',
+    [
+      ['name', 'bio'],
+      ['Alice', 'Hello\tworld'],
+    ],
+  ],
 ];
 
 for (const [format, source, expected] of cases) {
@@ -20,7 +49,10 @@ for (const [format, source, expected] of cases) {
       parser.write(source.slice(split));
       const result = parser.end();
       assert.deepEqual(result.data, expected, `split ${split}`);
-      assert.ok(Object.values(result.status).every(status => status === 'complete'), `split ${split}`);
+      assert.ok(
+        Object.values(result.status).every((status) => status === 'complete'),
+        `split ${split}`,
+      );
     }
     const characters = new StreamNormalizer({ format });
     for (const char of source) characters.write(char);

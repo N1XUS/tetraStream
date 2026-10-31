@@ -1,11 +1,23 @@
 import {
-  streamValidated, validateSnapshot,
-  type StandardSchemaV1, type InferInput, type InferOutput, type ValidationResult,
+  streamValidated,
+  validateSnapshot,
+  type StandardSchemaV1,
+  type InferInput,
+  type InferOutput,
+  type ValidationResult,
 } from '../dist/validation.js';
 import { StreamNormalizer } from '../dist/normalizer.js';
 
-interface Input { name: string; age?: number; nested: { enabled: boolean } }
-interface Output { label: string; age?: number; createdAt: Date }
+interface Input {
+  name: string;
+  age?: number;
+  nested: { enabled: boolean };
+}
+interface Output {
+  label: string;
+  age?: number;
+  createdAt: Date;
+}
 
 // A validator can carry types only at compile time, as Standard Schema specifies.
 const schema: StandardSchemaV1<Input, Output> = {
@@ -13,7 +25,12 @@ const schema: StandardSchemaV1<Input, Output> = {
     version: 1,
     vendor: 'typed-test',
     validate(value) {
-      if (typeof value !== 'object' || value === null || !('name' in value) || typeof value.name !== 'string') {
+      if (
+        typeof value !== 'object' ||
+        value === null ||
+        !('name' in value) ||
+        typeof value.name !== 'string'
+      ) {
         return { issues: [{ message: 'Expected name', path: [{ key: 'name' }] }] };
       }
       return { value: { label: value.name, createdAt: new Date() } };
@@ -55,12 +72,21 @@ async function consume() {
 }
 
 const asyncSchema: StandardSchemaV1<{ count: string }, { count: number }> = {
-  '~standard': { version: 1, vendor: 'typed-async-test', async validate(value) {
-    if (typeof value !== 'object' || value === null || !('count' in value) || typeof value.count !== 'string') {
-      return { issues: [{ message: 'Expected string count' }] };
-    }
-    return { value: { count: Number(value.count) } };
-  } },
+  '~standard': {
+    version: 1,
+    vendor: 'typed-async-test',
+    async validate(value) {
+      if (
+        typeof value !== 'object' ||
+        value === null ||
+        !('count' in value) ||
+        typeof value.count !== 'string'
+      ) {
+        return { issues: [{ message: 'Expected string count' }] };
+      }
+      return { value: { count: Number(value.count) } };
+    },
+  },
 };
 async function consumeAsync() {
   const parser = new StreamNormalizer<{ unrelated: boolean }>();
@@ -86,10 +112,16 @@ class VendorSchema {
     readonly version: 1;
     readonly vendor: string;
     readonly types?: { readonly input: string; readonly output: number };
-    readonly validate: (input: unknown) => { value: number } | Promise<{ issues: readonly { message: string }[] }>;
+    readonly validate: (
+      input: unknown,
+    ) => { value: number } | Promise<{ issues: readonly { message: string }[] }>;
   } = {
-    version: 1, vendor: 'external-shape',
-    validate: (input) => typeof input === 'string' ? { value: input.length } : Promise.resolve({ issues: [{ message: 'string required' }] }),
+    version: 1,
+    vendor: 'external-shape',
+    validate: (input) =>
+      typeof input === 'string'
+        ? { value: input.length }
+        : Promise.resolve({ issues: [{ message: 'string required' }] }),
   };
 }
 async function vendor() {

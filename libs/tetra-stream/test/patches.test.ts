@@ -53,9 +53,9 @@ test('patch events and replayed values do not alias parser state or earlier even
   api.applyPatchBatch(state, first);
   api.applyPatchBatch(state, parser.writePatch('ice"}]}'));
   assert.deepEqual(first, saved);
-  assert.equal(at(state.data, "items", 0, "name"), 'Alice');
+  assert.equal(at(state.data, 'items', 0, 'name'), 'Alice');
   record(at(state.data, 'items', 0)).name = 'Changed by consumer';
-  assert.equal(at(parser.snapshot().data, "items", 0, "name"), 'Alice');
+  assert.equal(at(parser.snapshot().data, 'items', 0, 'name'), 'Alice');
   assert.deepEqual(first, saved);
 });
 
@@ -66,7 +66,7 @@ test('errors have drainable patch state and closed parsers still reject input', 
   assert.throws(() => parser.endPatch(), SyntaxError);
   api.applyPatchBatch(state, parser.patch());
   assert.deepEqual(publicState(state), parser.snapshot());
-  assert.equal(at(state.data, "bio"), 'Hel');
+  assert.equal(at(state.data, 'bio'), 'Hel');
   assert.equal(state.state, 'error');
   assert.throws(() => parser.writePatch('lo"}'), /closed/i);
 });
@@ -78,7 +78,7 @@ test('replay rejects out-of-order batches and safely preserves prototype-like ke
   assert.throws(() => api.applyPatchBatch(state, { ...first, sequence: 2 }), /sequence/i);
   api.applyPatchBatch(state, first);
   assert.equal(Object.hasOwn(record(state.data), '__proto__'), true);
-  assert.equal(at(state.data, "__proto__", "polluted"), false);
+  assert.equal(at(state.data, '__proto__', 'polluted'), false);
   assert.equal(record({}).polluted, undefined);
   assert.throws(() => api.applyPatchBatch(state, first), /sequence/i);
 });
@@ -97,11 +97,17 @@ test('YAML rewrites and removed provisional paths are reflected in patch replay'
 
 test('patch mode never calls the full-snapshot cloning API', () => {
   const parser = new api.StreamNormalizer({ format: 'csv' });
-  parser.snapshot = () => { throw new Error('Unexpected full snapshot'); };
+  parser.snapshot = () => {
+    throw new Error('Unexpected full snapshot');
+  };
   const state = api.createPatchState({ format: 'csv' });
-  for (const chunk of ['name,role\n', 'Alex,Des', 'igner\n']) api.applyPatchBatch(state, parser.writePatch(chunk));
+  for (const chunk of ['name,role\n', 'Alex,Des', 'igner\n'])
+    api.applyPatchBatch(state, parser.writePatch(chunk));
   api.applyPatchBatch(state, parser.endPatch());
-  assert.deepEqual(state.data, [['name', 'role'], ['Alex', 'Designer']]);
+  assert.deepEqual(state.data, [
+    ['name', 'role'],
+    ['Alex', 'Designer'],
+  ]);
 });
 
 for (const [format, source] of Object.entries(sources) as [keyof typeof sources, string][]) {
@@ -121,7 +127,8 @@ for (const [format, source] of Object.entries(sources) as [keyof typeof sources,
 test('async patch stream replays in order with typed-accumulator semantics', async () => {
   assert.equal(typeof api.streamPatches, 'function');
   const state = api.createPatchState();
-  for await (const batch of api.streamPatches(['{"name":"Al', 'ice"}'])) api.applyPatchBatch(state, batch);
+  for await (const batch of api.streamPatches(['{"name":"Al', 'ice"}']))
+    api.applyPatchBatch(state, batch);
   assert.equal(state.state, 'complete');
   assert.deepEqual(state.data, { name: 'Alice' });
 });

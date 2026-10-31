@@ -50,7 +50,7 @@ if (!name) throw new Error('Missing #user-name');
 
 async function* textChunks() {
   yield '{"name":"Alex';
-  await new Promise(resolve => setTimeout(resolve, 400));
+  await new Promise((resolve) => setTimeout(resolve, 400));
   yield ' Morgan"}';
 }
 
@@ -104,7 +104,7 @@ const state = createPatchState<Profile>({ format: 'json' });
 
 async function* textChunks() {
   for (const chunk of ['{"bio":"Making com', 'plex things simple."}']) {
-    await new Promise(resolve => setTimeout(resolve, 400));
+    await new Promise((resolve) => setTimeout(resolve, 400));
     yield chunk;
   }
 }
@@ -123,12 +123,12 @@ Or use `parser.writePatch(chunk)` and `parser.endPatch()`. The existing `write()
 
 A `PatchBatch` contains `format`, a sequential `sequence` starting at 1, `patches`, parser `state`, and optional `error`. The operations are a TetraStream protocol, not RFC 6902 JSON Patch:
 
-| Operation | Meaning |
-| --- | --- |
-| `set` | Replace the value at `path` with `value`. |
-| `append` | Append the decoded string suffix in `value` at `path`. |
-| `remove` | Remove a provisional value. |
-| `status` | Set the path's completion; `null` removes its old status. |
+| Operation | Meaning                                                   |
+| --------- | --------------------------------------------------------- |
+| `set`     | Replace the value at `path` with `value`.                 |
+| `append`  | Append the decoded string suffix in `value` at `path`.    |
+| `remove`  | Remove a provisional value.                               |
+| `status`  | Set the path's completion; `null` removes its old status. |
 
 Paths are RFC 6901 pointers relative to data. Replay batches from one parser in order into a fresh accumulator of the same format. `applyPatchBatch` mutates and returns that consumer-owned accumulator; it copies incoming set values so events, parser state, and consumer state do not alias. Do not treat the accumulator as an immutable historical snapshot. A raw event's heterogeneous `set.value` is intentionally `unknown`; typed model access goes through `PatchState<User>` and `select`, and validated output goes through a schema.
 
@@ -150,33 +150,33 @@ for await (const snapshot of streamValidated(textChunks, { format: 'json', schem
   snapshot.data?.age; // string | undefined: partial, unvalidated input
   if (snapshot.validation.status === 'valid') {
     snapshot.validation.value.name; // string: validated required field
-    snapshot.validation.value.age;  // number: inferred transform output
+    snapshot.validation.value.age; // number: inferred transform output
   }
 }
 ```
 
 `validateSnapshot(snapshot, schema)` is also available for an existing parser or patch accumulator. Both sync and async schema validators are accepted; this helper always returns a promise. Validation runs only after successful document EOF, so incomplete required fields do not produce premature failures. Raw data remains unchanged: validators receive a clone, and transformed output is separate.
 
-| Validation status | Meaning |
-| --- | --- |
-| `pending` | Input is still streaming; the schema has not run. |
-| `valid` | `value` has the schema's full inferred output type. |
-| `invalid` | Parsing succeeded but the schema returned `issues`. |
-| `parse-error` | The supplied snapshot has a parser error; the schema did not run. |
+| Validation status | Meaning                                                               |
+| ----------------- | --------------------------------------------------------------------- |
+| `pending`         | Input is still streaming; the schema has not run.                     |
+| `valid`           | `value` has the schema's full inferred output type.                   |
+| `invalid`         | Parsing succeeded but the schema returned `issues`.                   |
+| `parse-error`     | The supplied snapshot has a parser error; the schema did not run.     |
 | `validator-error` | The validator threw or rejected; this is distinct from invalid input. |
 
 `streamValidated` propagates parser/source exceptions as the existing stream adapters do. Its snapshots infer the schema's input type, while only the narrowed `validation.value` exposes its output type. Exported `InferInput`, `InferOutput`, `ValidatedSnapshot`, and `StandardSchemaV1` are available for application declarations. Type parameters on `StreamNormalizer<T>` alone never validate model output.
 
 ## Completion contract
 
-| Signal | Meaning |
-| --- | --- |
-| No value at a path | The value is not available yet. Consumers can show a placeholder. |
-| `status[path] === 'partial'` | The value can still grow or change. |
-| `status[path] === 'complete'` | The value ended syntactically. The rest of the document may still fail. |
-| `state === 'streaming'` | The input is still open, even when the root has closed. |
-| `state === 'complete'` | `end()` succeeded under the selected format's syntax rules. |
-| `state === 'error'` | Input was malformed, a limit was exceeded, or the document was truncated. Available data remains accessible. |
+| Signal                        | Meaning                                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| No value at a path            | The value is not available yet. Consumers can show a placeholder.                                            |
+| `status[path] === 'partial'`  | The value can still grow or change.                                                                          |
+| `status[path] === 'complete'` | The value ended syntactically. The rest of the document may still fail.                                      |
+| `state === 'streaming'`       | The input is still open, even when the root has closed.                                                      |
+| `state === 'complete'`        | `end()` succeeded under the selected format's syntax rules.                                                  |
+| `state === 'error'`           | Input was malformed, a limit was exceeded, or the document was truncated. Available data remains accessible. |
 
 Paths use RFC 6901 JSON Pointer. `''` identifies the root, `/skills/0` identifies an array item, and `~` and `/` inside keys are escaped as `~0` and `~1`. Incomplete object keys are never exposed. A path can have partial status before a value is available, such as an initial `-` or `tr`.
 
@@ -275,9 +275,9 @@ HTML uses `htmlparser2`'s forgiving fragment semantics, including void elements,
 
 ```ts
 new StreamNormalizer({
-  format: 'json',       // See supported formats below; explicit, not detected
+  format: 'json', // See supported formats below; explicit, not detected
   maxLength: 1_000_000, // incoming UTF-16 code units
-  maxDepth: 128,        // nested containers/elements
+  maxDepth: 128, // nested containers/elements
 });
 ```
 
@@ -311,7 +311,9 @@ import type { LanguageStrategy, LanguageParser, LanguageUpdate } from 'tetra-str
 const json = new StreamNormalizer({ format: Format.JSON });
 json.write('{"name":"Al');
 
-interface Message { text: string }
+interface Message {
+  text: string;
+}
 class PlainTextStrategy implements LanguageStrategy<Message> {
   readonly format = 'plain-text';
   create(): LanguageParser<Message> {
@@ -325,8 +327,13 @@ class PlainTextStrategy implements LanguageStrategy<Message> {
       },
     });
     return {
-      write(chunk) { text += chunk; return result(false); },
-      end() { return result(true); },
+      write(chunk) {
+        text += chunk;
+        return result(false);
+      },
+      end() {
+        return result(true);
+      },
     };
   }
 }

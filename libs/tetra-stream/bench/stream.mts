@@ -8,20 +8,34 @@ import { StreamNormalizer, applyPatchBatch, createPatchState } from '../dist/ind
 type BenchmarkFormat = 'json' | 'yaml' | 'csv';
 type Mode = 'snapshots' | 'patches';
 
-const args: Record<string, string | undefined> = Object.fromEntries(process.argv.slice(2).map(arg => arg.replace(/^--/, '').split('=')));
+const args: Record<string, string | undefined> = Object.fromEntries(
+  process.argv.slice(2).map((arg) => arg.replace(/^--/, '').split('=')),
+);
 const rows = Number(args.rows ?? 2000);
 const chunkSize = Number(args.chunk ?? 256);
 const repeats = Number(args.repeats ?? 3);
 for (const [name, value] of Object.entries({ rows, chunkSize, repeats })) {
-  if (!Number.isSafeInteger(value) || value < 1) throw new TypeError(`${name} must be a positive integer`);
+  if (!Number.isSafeInteger(value) || value < 1)
+    throw new TypeError(`${name} must be a positive integer`);
 }
 function input(format: BenchmarkFormat, count: number) {
-  const records = Array.from({ length: count }, (_, index) => ({ name: `Person ${index}`, role: 'Engineer', notes: 'Building useful things, one chunk at a time.' }));
+  const records = Array.from({ length: count }, (_, index) => ({
+    name: `Person ${index}`,
+    role: 'Engineer',
+    notes: 'Building useful things, one chunk at a time.',
+  }));
   if (format === 'json') return JSON.stringify(records);
-  if (format === 'yaml') return records.map(row => `- name: ${row.name}\n  role: ${row.role}\n  notes: ${row.notes}\n`).join('');
-  return 'name,role,notes\r\n' + records.map(row => `${row.name},${row.role},"${row.notes}"\r\n`).join('');
+  if (format === 'yaml')
+    return records
+      .map((row) => `- name: ${row.name}\n  role: ${row.role}\n  notes: ${row.notes}\n`)
+      .join('');
+  return (
+    'name,role,notes\r\n' +
+    records.map((row) => `${row.name},${row.role},"${row.notes}"\r\n`).join('')
+  );
 }
-const median = (values: number[]) => values.toSorted((a, b) => a - b)[Math.floor(values.length / 2)];
+const median = (values: number[]) =>
+  values.toSorted((a, b) => a - b)[Math.floor(values.length / 2)];
 function run(format: BenchmarkFormat, source: string, mode: Mode) {
   globalThis.gc?.();
   const parser = new StreamNormalizer({ format, maxLength: source.length + 1 });
@@ -56,16 +70,20 @@ function run(format: BenchmarkFormat, source: string, mode: Mode) {
 }
 
 const cases: [BenchmarkFormat, number][] = [
-  ['json', Math.min(rows, 250)], ['json', rows],
-  ['csv', Math.min(rows, 250)], ['csv', rows],
+  ['json', Math.min(rows, 250)],
+  ['json', rows],
+  ['csv', Math.min(rows, 250)],
+  ['csv', rows],
   // YAML reparses the whole input prefix. Keep its default benchmark bounded.
-  ['yaml', Math.min(rows, 50)], ['yaml', Math.min(rows, 150)],
+  ['yaml', Math.min(rows, 50)],
+  ['yaml', Math.min(rows, 150)],
 ];
 const results = [];
 for (const [format, count] of cases) {
   const source = input(format, count);
   const warm = input(format, Math.min(count, 20));
-  run(format, warm, 'snapshots'); run(format, warm, 'patches');
+  run(format, warm, 'snapshots');
+  run(format, warm, 'patches');
   const reference = new StreamNormalizer({ format, maxLength: source.length + 1 });
   reference.write(source);
   const expected = reference.end();
@@ -74,14 +92,38 @@ for (const [format, count] of cases) {
     for (const result of runs) {
       assert.deepEqual(result.final, expected, `${format}/${mode} output must match snapshots`);
     }
-    results.push({ format, rows: count, mode, inputBytes: Buffer.byteLength(source), chunkUnits: chunkSize, updates: runs[0].updates,
-      medianMs: Math.round(median(runs.map(run => run.milliseconds)) * 100) / 100, emittedBytes: runs[0].emittedBytes });
+    results.push({
+      format,
+      rows: count,
+      mode,
+      inputBytes: Buffer.byteLength(source),
+      chunkUnits: chunkSize,
+      updates: runs[0].updates,
+      medianMs: Math.round(median(runs.map((run) => run.milliseconds)) * 100) / 100,
+      emittedBytes: runs[0].emittedBytes,
+    });
   }
 }
-const report = { generatedAt: new Date().toISOString(), node: process.version, platform: `${process.platform}/${process.arch}`, repeats,
-  methodology: 'Median wall time; includes parsing, output JSON serialization, and (patch mode only) mutable consumer replay. Snapshot mode emits independent full copies. ASCII fixture bytes equal UTF-16 units. Not a universal throughput guarantee.',
-  limitations: 'YAML still reparses each accumulated prefix. Snapshot copying is intentionally preserved for compatibility. UI rendering and transport latency are excluded.', results };
-console.table(results.map(result => ({ format: result.format, rows: result.rows, mode: result.mode, 'median ms': result.medianMs, 'output KiB': Math.round(result.emittedBytes / 1024) })));
+const report = {
+  generatedAt: new Date().toISOString(),
+  node: process.version,
+  platform: `${process.platform}/${process.arch}`,
+  repeats,
+  methodology:
+    'Median wall time; includes parsing, output JSON serialization, and (patch mode only) mutable consumer replay. Snapshot mode emits independent full copies. ASCII fixture bytes equal UTF-16 units. Not a universal throughput guarantee.',
+  limitations:
+    'YAML still reparses each accumulated prefix. Snapshot copying is intentionally preserved for compatibility. UI rendering and transport latency are excluded.',
+  results,
+};
+console.table(
+  results.map((result) => ({
+    format: result.format,
+    rows: result.rows,
+    mode: result.mode,
+    'median ms': result.medianMs,
+    'output KiB': Math.round(result.emittedBytes / 1024),
+  })),
+);
 const output = resolve(args.output ?? 'artifacts/stream-benchmark.json');
 mkdirSync(dirname(output), { recursive: true });
 writeFileSync(output, JSON.stringify(report, null, 2) + '\n');

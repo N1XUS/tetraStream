@@ -8,8 +8,12 @@ import type { Completion, CssDocument, CssNode, MutableSnapshot } from './types.
  * parses all selectors, declarations, at-rules and nesting. Keeping strings and
  * comments intact prevents their delimiters from becoming repaired CSS rules.
  */
-function recoverTokens(source: string, maxDepth: number): {
-  input: string; delimiters: Map<number, ';' | '}'>;
+function recoverTokens(
+  source: string,
+  maxDepth: number,
+): {
+  input: string;
+  delimiters: Map<number, ';' | '}'>;
 } {
   let quote: string | undefined;
   let comment = false;
@@ -21,7 +25,10 @@ function recoverTokens(source: string, maxDepth: number): {
   for (let index = 0; index < source.length; index++) {
     const char = source[index];
     if (comment) {
-      if (char === '*' && source[index + 1] === '/') { comment = false; index++; }
+      if (char === '*' && source[index + 1] === '/') {
+        comment = false;
+        index++;
+      }
       continue;
     }
     // Escape handling precedes every other token mode, including URL tokens.
@@ -32,23 +39,40 @@ function recoverTokens(source: string, maxDepth: number): {
       continue;
     }
     danglingEscape = false;
-    if (quote) { if (char === quote) quote = undefined; continue; }
-    if (brackets.at(-1)?.url) {
-      if (char === ')') { brackets.pop(); groupDepth--; }
+    if (quote) {
+      if (char === quote) quote = undefined;
       continue;
     }
-    if (char === '/' && source[index + 1] === '*') { comment = true; index++; continue; }
-    if (char === '"' || char === "'") { quote = char; continue; }
+    if (brackets.at(-1)?.url) {
+      if (char === ')') {
+        brackets.pop();
+        groupDepth--;
+      }
+      continue;
+    }
+    if (char === '/' && source[index + 1] === '*') {
+      comment = true;
+      index++;
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      continue;
+    }
     if (char === '(' || char === '[' || char === '{') {
       // PostCSS treats unquoted url(...) as one opaque token, including /*.
       const previous = source[index - 4] ?? '';
       const next = source[index + 1] ?? '';
-      const url = char === '(' && source.slice(index - 3, index) === 'url'
-        && !/[-_a-zA-Z0-9\\\u0080-\uFFFF]/u.test(previous) && !/[\s'"]/u.test(next);
+      const url =
+        char === '(' &&
+        source.slice(index - 3, index) === 'url' &&
+        !/[-_a-zA-Z0-9\\\u0080-\uFFFF]/u.test(previous) &&
+        !/[\s'"]/u.test(next);
       brackets.push({ closing: char === '(' ? ')' : char === '[' ? ']' : '}', url });
       if (char === '{') blockDepth++;
       else groupDepth++;
-      if (blockDepth > maxDepth || groupDepth > maxDepth) throw new RangeError('Document exceeds maxDepth');
+      if (blockDepth > maxDepth || groupDepth > maxDepth)
+        throw new RangeError('Document exceeds maxDepth');
     } else if (char === brackets.at(-1)?.closing) {
       brackets.pop();
       if (char === '}') {
@@ -58,7 +82,13 @@ function recoverTokens(source: string, maxDepth: number): {
     } else if (!groupDepth && (char === ';' || char === '}')) delimiters.set(index, char);
   }
   return {
-    input: source + (comment ? '*/' : quote ? `${danglingEscape ? '\\' : ''}${quote}` : '') + brackets.reverse().map(frame => frame.closing).join(''),
+    input:
+      source +
+      (comment ? '*/' : quote ? `${danglingEscape ? '\\' : ''}${quote}` : '') +
+      brackets
+        .reverse()
+        .map((frame) => frame.closing)
+        .join(''),
     delimiters,
   };
 }
@@ -67,7 +97,10 @@ function recoverTokens(source: string, maxDepth: number): {
 export class CssMachine {
   private source = '';
 
-  constructor(private readonly current: MutableSnapshot, private readonly maxDepth: number) {
+  constructor(
+    private readonly current: MutableSnapshot,
+    private readonly maxDepth: number,
+  ) {
     replaceData(current, { kind: 'stylesheet', nodes: [] });
     replaceCompletions(current, { '': 'partial', '/kind': 'complete', '/nodes': 'partial' });
   }
@@ -81,48 +114,68 @@ export class CssMachine {
       else {
         // Prefer PostCSS's exact custom-property/block handling. The safe
         // parser is only needed when lexical EOF balancing cannot parse a prefix.
-        try { root = parse(this.source); }
-        catch {
-          try { root = parse(input); }
-          catch { root = safeParse(input); }
+        try {
+          root = parse(this.source);
+        } catch {
+          try {
+            root = parse(input);
+          } catch {
+            root = safeParse(input);
+          }
         }
       }
-    }
-    catch (error) {
+    } catch (error) {
       throw new SyntaxError(error instanceof Error ? error.message : String(error));
     }
     if (root.type !== 'root') throw new SyntaxError('Expected a CSS stylesheet');
     const status: Record<string, Completion> = {};
-    const mark = (path: string, complete: boolean): void => { status[path] = complete ? 'complete' : 'partial'; };
+    const mark = (path: string, complete: boolean): void => {
+      status[path] = complete ? 'complete' : 'partial';
+    };
     const validFragment = (node: ChildNode): boolean => {
       const start = node.source?.start?.offset;
       const end = node.source?.end?.offset;
       if (start === undefined || end === undefined || end > this.source.length) return false;
       const fragment = this.source.slice(start, end);
       const parentStart = node.parent?.source?.start?.offset;
-      const declarationContext = parentStart === undefined ? `x{${fragment}}`
-        : this.source.slice(parentStart, end) + (node.parent?.type === 'root' ? '' : '}');
+      const declarationContext =
+        parentStart === undefined
+          ? `x{${fragment}}`
+          : this.source.slice(parentStart, end) + (node.parent?.type === 'root' ? '' : '}');
       try {
         parse(node.type === 'decl' ? declarationContext : fragment);
         if (node.type !== 'decl') return true;
         const isolated = parse(`x{${fragment}}`).first;
         if (isolated?.type !== 'rule') return false;
-        const declarations = isolated.nodes.filter(child => child.type === 'decl');
-        return declarations.length === 1 && declarations[0].prop === node.prop
-          && declarations[0].value === node.value && !!declarations[0].important === !!node.important;
+        const declarations = isolated.nodes.filter((child) => child.type === 'decl');
+        return (
+          declarations.length === 1 &&
+          declarations[0].prop === node.prop &&
+          declarations[0].value === node.value &&
+          !!declarations[0].important === !!node.important
+        );
+      } catch {
+        return false;
       }
-      catch { return false; }
     };
-    const walk = (node: ChildNode, path: string, parentComplete: boolean, depth: number): CssNode => {
+    const walk = (
+      node: ChildNode,
+      path: string,
+      parentComplete: boolean,
+      depth: number,
+    ): CssNode => {
       const end = node.source?.end?.offset;
       const originalEnd = end !== undefined && end <= this.source.length;
       const last = originalEnd ? lexical.delimiters.get(end - 1) : undefined;
-      const hasChildren = node.type === 'rule' || node.type === 'atrule' && node.nodes !== undefined;
+      const hasChildren =
+        node.type === 'rule' || (node.type === 'atrule' && node.nodes !== undefined);
       if (hasChildren && depth >= this.maxDepth) throw new RangeError('Document exceeds maxDepth');
       let complete = final;
-      if (node.type === 'comment') complete ||= originalEnd && this.source.slice(end - 2, end) === '*/';
+      if (node.type === 'comment')
+        complete ||= originalEnd && this.source.slice(end - 2, end) === '*/';
       else if (hasChildren) complete ||= last === '}' && validFragment(node);
-      else if (node.type === 'decl') complete ||= (parentComplete || last === ';') && validFragment(node);
+      else if (node.type === 'decl')
+        complete ||= (parentComplete || last === ';') && validFragment(node);
       else complete ||= last === ';' && validFragment(node);
       mark(path, complete);
       mark(`${path}/kind`, true);
@@ -150,7 +203,9 @@ export class CssMachine {
       }
       const children = (): CssNode[] => {
         mark(`${path}/nodes`, complete);
-        return (node.nodes ?? []).map((child, index) => walk(child, `${path}/nodes/${index}`, complete, depth + 1));
+        return (node.nodes ?? []).map((child, index) =>
+          walk(child, `${path}/nodes/${index}`, complete, depth + 1),
+        );
       };
       if (node.type === 'rule') {
         mark(`${path}/selector`, true);
@@ -159,16 +214,29 @@ export class CssMachine {
       const nameEnd = (node.source?.start?.offset ?? 0) + 1 + node.name.length;
       mark(`${path}/name`, final || nameEnd < this.source.length);
       mark(`${path}/params`, complete || hasChildren);
-      return { kind: 'at-rule', name: node.name, params: originalText(node.params), ...(node.nodes ? { nodes: children() } : {}) };
+      return {
+        kind: 'at-rule',
+        name: node.name,
+        params: originalText(node.params),
+        ...(node.nodes ? { nodes: children() } : {}),
+      };
     };
     mark('', final);
     mark('/kind', true);
     mark('/nodes', final);
-    const data: CssDocument = { kind: 'stylesheet', nodes: root.nodes.map((node, index) => walk(node, `/nodes/${index}`, final, 0)) };
+    const data: CssDocument = {
+      kind: 'stylesheet',
+      nodes: root.nodes.map((node, index) => walk(node, `/nodes/${index}`, final, 0)),
+    };
     replaceData(this.current, data);
     replaceCompletions(this.current, status);
   }
 
-  write(chunk: string): void { this.source += chunk; this.update(false); }
-  end(): void { this.update(true); }
+  write(chunk: string): void {
+    this.source += chunk;
+    this.update(false);
+  }
+  end(): void {
+    this.update(true);
+  }
 }

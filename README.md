@@ -7,6 +7,8 @@
 [![CI](https://github.com/N1XUS/tetraStream/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/N1XUS/tetraStream/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+[Live demos](https://tetrastream.severyn.pro/) · [Usage guide](https://tetrastream.severyn.pro/guide/) · [npm package](https://www.npmjs.com/package/tetra-stream)
+
 TetraStream is a TypeScript library for turning an unfinished text stream into useful structured data. Render a name while it is still being generated, add table cells before a CSV row ends, or wait for a complete avatar URL before loading an image.
 
 It supports **JSON, YAML, XML, HTML, JSON Lines, CSV, TSV, and CSS**, with explicit partial/complete metadata. The parser is independent of your AI provider, transport, and UI framework.
@@ -24,22 +26,25 @@ An early `0.1.x` release with ESM output and TypeScript declarations. The built 
 ```ts
 import { Format, StreamNormalizer, select } from 'tetra-stream';
 
-interface Profile { name: string; bio: string }
+interface Profile {
+  name: string;
+  bio: string;
+}
 const parser = new StreamNormalizer<Profile>({ format: Format.JSON });
 
 const first = parser.write('{"name":"Alex Morgan","bio":"Making com');
-console.log(first.data?.name);          // Alex Morgan
-console.log(first.data?.bio);           // Making com
-console.log(first.status['/name']);     // complete
-console.log(first.status['/bio']);      // partial
+console.log(first.data?.name); // Alex Morgan
+console.log(first.data?.bio); // Making com
+console.log(first.status['/name']); // complete
+console.log(first.status['/bio']); // partial
 
 const bio = select(first, '/bio', { when: 'complete' });
-console.log(bio.status);                // pending: withheld until complete
+console.log(bio.status); // pending: withheld until complete
 
 parser.write('plex things simple."}');
 const final = parser.end();
-console.log(final.state);               // complete
-console.log(final.data?.bio);           // Making complex things simple.
+console.log(final.state); // complete
+console.log(final.data?.bio); // Making complex things simple.
 ```
 
 A syntactically complete field can be used while the rest of the response is still arriving. Completion does **not** prove that required fields exist or that your application schema is valid. Runtime schema validation is available separately.
@@ -104,27 +109,27 @@ Your application supplies the provider request or endpoint. TetraStream does not
 
 ## Supported formats
 
-| Format option | Data shape | Streaming behavior |
-| --- | --- | --- |
-| `json` | Objects, arrays, scalars | Decoded strings and available scalar prefixes appear progressively. |
-| `yaml`, `yml` | JSON-compatible data | Maps, sequences, and scalars; one document, with prefix reparsing. |
-| `xml`, `html` | Ordered document/element/text tree | Text grows inside elements; attributes appear after the opening tag is complete. |
-| `ndjson`, `jsonl` | Array of records | Includes the current partial record. |
-| `csv`, `tsv` | Array of string rows | Includes the header row; cells and rows have independent completion states. |
-| `css` | Stylesheet/rule/declaration tree | Selectors and declaration values appear progressively; completed declarations can drive a preview. |
+| Format option     | Data shape                         | Streaming behavior                                                                                 |
+| ----------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `json`            | Objects, arrays, scalars           | Decoded strings and available scalar prefixes appear progressively.                                |
+| `yaml`, `yml`     | JSON-compatible data               | Maps, sequences, and scalars; one document, with prefix reparsing.                                 |
+| `xml`, `html`     | Ordered document/element/text tree | Text grows inside elements; attributes appear after the opening tag is complete.                   |
+| `ndjson`, `jsonl` | Array of records                   | Includes the current partial record.                                                               |
+| `csv`, `tsv`      | Array of string rows               | Includes the header row; cells and rows have independent completion states.                        |
+| `css`             | Stylesheet/rule/declaration tree   | Selectors and declaration values appear progressively; completed declarations can drive a preview. |
 
 Paths use JSON Pointer, such as `/bio`, `/skills/0`, or `/1/0`. Markup and CSS use paths through their tree structures. Format-specific data remains explicit; the library does not silently turn every document into a profile object.
 
 ## APIs at a glance
 
-| API | Use it for |
-| --- | --- |
-| `StreamNormalizer<T>` | Direct `write`, `end`, and independent `snapshot` access. |
-| `streamStructured<T>` | Async or sync text chunks → progressive snapshots. |
-| `select(snapshot, path, options)` | Typed field paths with partial, complete, or document visibility policies. |
-| `streamPatches` / `writePatch` | Changed paths and decoded string suffixes for larger responses. |
-| `createPatchState` / `applyPatchBatch` | Ordered replay into a consumer-owned accumulator. |
-| `streamValidated` / `validateSnapshot` | Standard Schema V1 validation after successful document EOF. |
+| API                                    | Use it for                                                                 |
+| -------------------------------------- | -------------------------------------------------------------------------- |
+| `StreamNormalizer<T>`                  | Direct `write`, `end`, and independent `snapshot` access.                  |
+| `streamStructured<T>`                  | Async or sync text chunks → progressive snapshots.                         |
+| `select(snapshot, path, options)`      | Typed field paths with partial, complete, or document visibility policies. |
+| `streamPatches` / `writePatch`         | Changed paths and decoded string suffixes for larger responses.            |
+| `createPatchState` / `applyPatchBatch` | Ordered replay into a consumer-owned accumulator.                          |
+| `streamValidated` / `validateSnapshot` | Standard Schema V1 validation after successful document EOF.               |
 
 `data` is `DeepPartial<T> | undefined`. A generic type provides compile-time expectations, not runtime validation. Only the narrowed `validation.value` is validated schema output. Catch source/parse failures and keep the last useful UI state; a direct parser retains data and its error in `snapshot()`.
 
@@ -180,7 +185,9 @@ import type { LanguageStrategy, LanguageParser, LanguageUpdate } from 'tetra-str
 const json = new StreamNormalizer({ format: Format.JSON });
 json.write('{"name":"Al');
 
-interface Message { text: string }
+interface Message {
+  text: string;
+}
 class PlainTextStrategy implements LanguageStrategy<Message> {
   readonly format = 'plain-text';
   create(): LanguageParser<Message> {
@@ -194,8 +201,13 @@ class PlainTextStrategy implements LanguageStrategy<Message> {
       },
     });
     return {
-      write(chunk) { text += chunk; return result(false); },
-      end() { return result(true); },
+      write(chunk) {
+        text += chunk;
+        return result(false);
+      },
+      end() {
+        return result(true);
+      },
     };
   }
 }

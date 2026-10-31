@@ -1,6 +1,15 @@
-import { StreamNormalizer, streamStructured, type Snapshot, type MarkupDocument } from '../dist/index.js';
+import {
+  StreamNormalizer,
+  streamStructured,
+  type Snapshot,
+  type MarkupDocument,
+} from '../dist/index.js';
 
-interface User { name: string; skills: string[]; address: { city: string } }
+interface User {
+  name: string;
+  skills: string[];
+  address: { city: string };
+}
 const parser = new StreamNormalizer<User>({ format: 'json' });
 const partial = parser.write('{"name":"Al');
 const name: string | undefined = partial.data?.name;

@@ -1,5 +1,20 @@
-import { StreamNormalizer, applyPatchBatch, createPatchState, select, streamStructured } from '../dist/index.js';
-import type { CssDocument, CssNode, CssRule, CssDeclaration, CssAtRule, CssComment, PathValue, Pointer } from '../dist/index.js';
+import {
+  StreamNormalizer,
+  applyPatchBatch,
+  createPatchState,
+  select,
+  streamStructured,
+} from '../dist/index.js';
+import type {
+  CssDocument,
+  CssNode,
+  CssRule,
+  CssDeclaration,
+  CssAtRule,
+  CssComment,
+  PathValue,
+  Pointer,
+} from '../dist/index.js';
 
 const parser = new StreamNormalizer<CssDocument>({ format: 'css' });
 const snapshot = parser.write('.ai-card { color: re');
@@ -28,12 +43,19 @@ const pointer: Pointer<CssDocument> = '/nodes/0/nodes/0/important';
 const important: PathValue<CssDocument, '/nodes/0/nodes/0/important'> = true;
 const nodes: CssNode[] = [
   { kind: 'rule', selector: '.ai-card', nodes: [] } satisfies CssRule,
-  { kind: 'declaration', property: 'color', value: 'red', important: false } satisfies CssDeclaration,
+  {
+    kind: 'declaration',
+    property: 'color',
+    value: 'red',
+    important: false,
+  } satisfies CssDeclaration,
   { kind: 'at-rule', name: 'media', params: 'all', nodes: [] } satisfies CssAtRule,
   { kind: 'comment', text: 'hello' } satisfies CssComment,
 ];
 async function consume() {
-  for await (const item of streamStructured<CssDocument>(['.ai-card { color: red; }'], { format: 'css' })) {
+  for await (const item of streamStructured<CssDocument>(['.ai-card { color: red; }'], {
+    format: 'css',
+  })) {
     const document: 'stylesheet' | undefined = item.data?.kind;
     void document;
   }

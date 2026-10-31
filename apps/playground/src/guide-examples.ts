@@ -5,7 +5,7 @@ export const profileChunks = [
   '{"name":"Alex',
   ' Morgan","bio":"Making complex ',
   'things feel simple.","avatar":"/avatars/alex-',
-  'morgan.png"}',
+  'morgan.webp"}',
 ];
 
 const profileSource = `async function* textChunks() {
@@ -96,10 +96,10 @@ if (name.status === 'partial' || name.status === 'complete') {
 const avatar = select(snapshot, '/avatar', { when: 'complete' });
 console.log(avatar.status); // "pending": do not assign an image src yet
 
-const next = parser.write('x-morgan.png"}');
+const next = parser.write('x-morgan.webp"}');
 const ready = select(next, '/avatar', { when: 'complete' });
 if (ready.status === 'complete') console.log(ready.value);
-// "/avatars/alex-morgan.png"; field complete, document still streaming
+// "/avatars/alex-morgan.webp"; field complete, document still streaming
 console.log(parser.end().state); // "complete" after successful EOF`,
   fetch: `import { streamStructured } from 'tetra-stream';
 

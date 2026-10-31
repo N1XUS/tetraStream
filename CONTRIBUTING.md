@@ -27,6 +27,7 @@ Library imports ending in `.js` deliberately target the emitted ESM files. Brows
 ## Verify
 
 ```sh
+npm run format:check
 npm run build
 npm test
 npm run typecheck
@@ -44,3 +45,5 @@ Open a focused pull request against `main`. Describe the user-visible problem, r
 Do not change package versions or publish artifacts as part of an ordinary contribution. See [release instructions](docs/RELEASING.md).
 
 Contributions are licensed under the project's [MIT license](LICENSE).
+
+Run `npm run format` to apply the repository Prettier configuration to source, tests, configuration, and documentation. Generated files and local build/tool state are ignored.

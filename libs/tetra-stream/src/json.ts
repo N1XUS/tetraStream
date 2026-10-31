@@ -3,17 +3,39 @@ import type { JSONValue, MutableSnapshot } from './types.js';
 
 type Phase = 'value' | 'keyOrEnd' | 'valueOrEnd' | 'key' | 'colon' | 'commaOrEnd' | 'done';
 type RootContext = { kind: 'root'; path: ''; phase: Phase };
-type ObjectContext = { kind: 'object'; path: string; phase: Phase; value: Record<string, JSONValue>; parent: Context; key: string; keys: Set<string> };
-type ArrayContext = { kind: 'array'; path: string; phase: Phase; value: JSONValue[]; parent: Context; keys: Set<string> };
+type ObjectContext = {
+  kind: 'object';
+  path: string;
+  phase: Phase;
+  value: Record<string, JSONValue>;
+  parent: Context;
+  key: string;
+  keys: Set<string>;
+};
+type ArrayContext = {
+  kind: 'array';
+  path: string;
+  phase: Phase;
+  value: JSONValue[];
+  parent: Context;
+  keys: Set<string>;
+};
 type Context = RootContext | ObjectContext | ArrayContext;
 type ValueLocation = { parent: Context; path: string };
-type StringToken = ValueLocation & { kind: 'string'; text: string; isKey?: boolean; escape: boolean; unicode: string | null };
+type StringToken = ValueLocation & {
+  kind: 'string';
+  text: string;
+  isKey?: boolean;
+  escape: boolean;
+  unicode: string | null;
+};
 type NumberState = 'sign' | 'zero' | 'int' | 'dot' | 'frac' | 'e' | 'esign' | 'exp';
 type NumberToken = ValueLocation & { kind: 'number'; raw: string; state: NumberState };
 type LiteralToken = ValueLocation & { kind: 'literal'; target: string; index: number };
 type Token = StringToken | NumberToken | LiteralToken;
 
-const pointer = (key: string | number): string => String(key).replaceAll('~', '~0').replaceAll('/', '~1');
+const pointer = (key: string | number): string =>
+  String(key).replaceAll('~', '~0').replaceAll('/', '~1');
 const whitespace = (char: string): boolean => /[ \t\n\r]/.test(char);
 const numericEnd = (state: NumberState): boolean => ['zero', 'int', 'frac', 'exp'].includes(state);
 const transitions: Record<NumberState, Record<string, NumberState | undefined>> = {
@@ -33,15 +55,22 @@ export class JsonMachine {
   private token: Token | null;
   private offset: number;
 
-  constructor(private readonly current: MutableSnapshot, private readonly maxDepth: number) {
+  constructor(
+    private readonly current: MutableSnapshot,
+    private readonly maxDepth: number,
+  ) {
     this.root = { kind: 'root', path: '', phase: 'value' };
     this.stack = [];
     this.token = null;
     this.offset = 0;
   }
 
-  private error(message: string): never { throw new SyntaxError(`${message} at offset ${this.offset}`); }
-  private parent(): Context { return this.stack.at(-1) ?? this.root; }
+  private error(message: string): never {
+    throw new SyntaxError(`${message} at offset ${this.offset}`);
+  }
+  private parent(): Context {
+    return this.stack.at(-1) ?? this.root;
+  }
 
   private place(parent: Context): string {
     if (parent.kind === 'root') return '';
@@ -55,7 +84,12 @@ export class JsonMachine {
     else {
       const key = parent.kind === 'array' ? path.slice(path.lastIndexOf('/') + 1) : parent.key;
       // defineProperty handles keys such as __proto__ as data, without setters.
-      Object.defineProperty(parent.value, key, { value, writable: true, configurable: true, enumerable: true });
+      Object.defineProperty(parent.value, key, {
+        value,
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      });
     }
   }
 
@@ -73,11 +107,26 @@ export class JsonMachine {
       if (char === '{') {
         const value: Record<string, JSONValue> = {};
         this.assign(parent, value, path);
-        this.stack.push({ kind: 'object', value, path, parent, phase: 'keyOrEnd', key: '', keys: new Set() });
+        this.stack.push({
+          kind: 'object',
+          value,
+          path,
+          parent,
+          phase: 'keyOrEnd',
+          key: '',
+          keys: new Set(),
+        });
       } else {
         const value: JSONValue[] = [];
         this.assign(parent, value, path);
-        this.stack.push({ kind: 'array', value, path, parent, phase: 'valueOrEnd', keys: new Set() });
+        this.stack.push({
+          kind: 'array',
+          value,
+          path,
+          parent,
+          phase: 'valueOrEnd',
+          keys: new Set(),
+        });
       }
     } else if (char === '"') {
       this.assign(parent, '', path);
@@ -87,7 +136,13 @@ export class JsonMachine {
       this.token = { kind: 'number', parent, path, raw: char, state };
       if (numericEnd(state)) this.assign(parent, Number(char), path);
     } else if ('tfn'.includes(char)) {
-      this.token = { kind: 'literal', parent, path, target: ({ t: 'true', f: 'false', n: 'null' } as Record<string, string>)[char], index: 1 };
+      this.token = {
+        kind: 'literal',
+        parent,
+        path,
+        target: ({ t: 'true', f: 'false', n: 'null' } as Record<string, string>)[char],
+        index: 1,
+      };
     } else this.error('Expected a JSON value');
   }
 
@@ -104,7 +159,16 @@ export class JsonMachine {
       token.escape = false;
       if (char === 'u') token.unicode = '';
       else {
-        const escapes: Record<string, string> = { '"': '"', '\\': '\\', '/': '/', b: '\b', f: '\f', n: '\n', r: '\r', t: '\t' };
+        const escapes: Record<string, string> = {
+          '"': '"',
+          '\\': '\\',
+          '/': '/',
+          b: '\b',
+          f: '\f',
+          n: '\n',
+          r: '\r',
+          t: '\t',
+        };
         if (!Object.hasOwn(escapes, char)) this.error('Invalid string escape');
         token.text += escapes[char];
       }
@@ -112,7 +176,8 @@ export class JsonMachine {
     else if (char === '"') {
       if (token.isKey) {
         if (token.parent.kind !== 'object') this.error('Object key outside an object');
-        if (token.parent.keys.has(token.text)) this.error(`Duplicate key ${JSON.stringify(token.text)}`);
+        if (token.parent.keys.has(token.text))
+          this.error(`Duplicate key ${JSON.stringify(token.text)}`);
         token.parent.keys.add(token.text);
         token.parent.key = token.text;
         token.parent.phase = 'colon';
@@ -123,16 +188,19 @@ export class JsonMachine {
       if (char.charCodeAt(0) < 0x20) this.error('Unescaped control character');
       token.text += char;
     }
-    if (!token.isKey && token.text.length !== previousLength) this.assign(token.parent, token.text, token.path, token.text.slice(previousLength));
+    if (!token.isKey && token.text.length !== previousLength)
+      this.assign(token.parent, token.text, token.path, token.text.slice(previousLength));
   }
 
   private number(char: string, token: NumberToken): boolean {
-    const category = char === '0' ? 'zero' : /[1-9]/.test(char) ? 'digit' : /[eE]/.test(char) ? 'e' : char;
+    const category =
+      char === '0' ? 'zero' : /[1-9]/.test(char) ? 'digit' : /[eE]/.test(char) ? 'e' : char;
     const next = transitions[token.state][category];
     if (next) {
       token.state = next;
       token.raw += char;
-      if (numericEnd(next) && Number.isFinite(Number(token.raw))) this.assign(token.parent, Number(token.raw), token.path);
+      if (numericEnd(next) && Number.isFinite(Number(token.raw)))
+        this.assign(token.parent, Number(token.raw), token.path);
       return true;
     }
     if (!whitespace(char) && ![',', '}', ']'].includes(char)) this.error('Invalid number');
@@ -152,7 +220,10 @@ export class JsonMachine {
     for (let index = 0; index < chunk.length; index++, this.offset++) {
       const char = chunk[index];
       const token = this.token;
-      if (token?.kind === 'string') { this.string(char, token); continue; }
+      if (token?.kind === 'string') {
+        this.string(char, token);
+        continue;
+      }
       if (token?.kind === 'literal') {
         if (char !== token.target[token.index++]) this.error('Invalid literal');
         if (token.index === token.target.length) {
@@ -166,12 +237,24 @@ export class JsonMachine {
       const parent = this.parent();
       const close = parent.kind === 'object' ? '}' : ']';
       if (parent.phase === 'done') this.error('Unexpected content after the root value');
-      if (['keyOrEnd', 'valueOrEnd', 'commaOrEnd'].includes(parent.phase) && char === close && parent.kind !== 'root') {
+      if (
+        ['keyOrEnd', 'valueOrEnd', 'commaOrEnd'].includes(parent.phase) &&
+        char === close &&
+        parent.kind !== 'root'
+      ) {
         this.stack.pop();
         this.finish(parent);
       } else if (parent.kind === 'object' && ['key', 'keyOrEnd'].includes(parent.phase)) {
         if (char !== '"') this.error('Expected an object key');
-        this.token = { kind: 'string', parent, path: '', isKey: true, text: '', escape: false, unicode: null };
+        this.token = {
+          kind: 'string',
+          parent,
+          path: '',
+          isKey: true,
+          text: '',
+          escape: false,
+          unicode: null,
+        };
       } else if (parent.phase === 'colon') {
         if (char !== ':') this.error('Expected a colon');
         parent.phase = 'value';
@@ -185,6 +268,7 @@ export class JsonMachine {
 
   end(): void {
     if (this.token?.kind === 'number') this.finishNumber(this.token);
-    if (this.token || this.stack.length || this.root.phase !== 'done') this.error('Stream ended before the JSON document was complete');
+    if (this.token || this.stack.length || this.root.phase !== 'done')
+      this.error('Stream ended before the JSON document was complete');
   }
 }

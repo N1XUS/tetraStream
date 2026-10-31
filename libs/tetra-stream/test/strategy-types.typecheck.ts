@@ -1,10 +1,30 @@
-import { Format, StreamNormalizer, streamStructured, streamPatches, createPatchState, select } from '../dist/index.js';
-import type { FormatName, LanguageStrategy, LanguageParser, LanguageStrategyOptions, LanguageUpdate, Snapshot } from '../dist/index.js';
-interface Message { text: string; count: number }
+import {
+  Format,
+  StreamNormalizer,
+  streamStructured,
+  streamPatches,
+  createPatchState,
+  select,
+} from '../dist/index.js';
+import type {
+  FormatName,
+  LanguageStrategy,
+  LanguageParser,
+  LanguageStrategyOptions,
+  LanguageUpdate,
+  Snapshot,
+} from '../dist/index.js';
+interface Message {
+  text: string;
+  count: number;
+}
 class MessageStrategy implements LanguageStrategy<Message> {
   readonly format = 'message';
   create(_options: LanguageStrategyOptions): LanguageParser<Message> {
-    const update: LanguageUpdate<Message> = { data: { text: 'hello' }, status: { '/text': 'partial' } };
+    const update: LanguageUpdate<Message> = {
+      data: { text: 'hello' },
+      status: { '/text': 'partial' },
+    };
     return { write: () => update, end: () => update };
   }
 }

@@ -10,7 +10,10 @@ export class DelimitedMachine {
   private skipLF = false;
   private offset = 0;
 
-  constructor(private readonly current: MutableSnapshot, private readonly separator: string) {
+  constructor(
+    private readonly current: MutableSnapshot,
+    private readonly separator: string,
+  ) {
     current.data = this.rows;
     setCompletion(current, '', 'partial');
   }
@@ -47,11 +50,17 @@ export class DelimitedMachine {
       const initial = this.offset === 0;
       this.offset += char.length;
       if (initial && char === '\uFEFF') continue;
-      if (this.skipLF) { this.skipLF = false; if (char === '\n') continue; }
+      if (this.skipLF) {
+        this.skipLF = false;
+        if (char === '\n') continue;
+      }
       this.ensureCell();
       if (this.mode === 'quoted') {
         if (char === '"') this.mode = 'quote';
-        else { this.row![this.column] += char; recordAppend(this.current, `/${this.rows.length - 1}/${this.column}`, char); }
+        else {
+          this.row![this.column] += char;
+          recordAppend(this.current, `/${this.rows.length - 1}/${this.column}`, char);
+        }
         continue;
       }
       if (this.mode === 'quote' && char === '"') {
@@ -65,9 +74,13 @@ export class DelimitedMachine {
       } else if (char === '\n' || char === '\r') {
         this.finishRow();
         this.skipLF = char === '\r';
-      } else if (this.mode === 'quote') throw new SyntaxError(`Unexpected character after a closing quote at offset ${this.offset - 1}`);
+      } else if (this.mode === 'quote')
+        throw new SyntaxError(
+          `Unexpected character after a closing quote at offset ${this.offset - 1}`,
+        );
       else if (char === '"') {
-        if (this.mode !== 'start') throw new SyntaxError(`Quote inside an unquoted cell at offset ${this.offset - 1}`);
+        if (this.mode !== 'start')
+          throw new SyntaxError(`Quote inside an unquoted cell at offset ${this.offset - 1}`);
         this.mode = 'quoted';
       } else {
         this.row![this.column] += char;

@@ -6,7 +6,11 @@ import { readProfile, readSkillItems } from '../src/profile.ts';
 for (const [format, prefix, suffix] of [
   ['json', '{"name":"Alice","bio":"Software eng', 'ineer"}'],
   ['xml', '<user><name>Alice</name><bio>Software eng', 'ineer</bio></user>'],
-  ['html', '<article><h2 data-field="name">Alice</h2><p data-field="bio">Software eng', 'ineer</p></article>'],
+  [
+    'html',
+    '<article><h2 data-field="name">Alice</h2><p data-field="bio">Software eng',
+    'ineer</p></article>',
+  ],
   ['yaml', 'name: "Alice"\nbio: Software eng', 'ineer\nwebsite: test'],
   ['yml', 'name: "Alice"\nbio: Software eng', 'ineer\nwebsite: test'],
   ['ndjson', '{"name":"Alice"}\n{"bio":"Software eng', 'ineer"}\n'],
@@ -33,15 +37,24 @@ test('non-string skills do not shift completion states onto later string values'
 
 test('user card binding keeps empty strings and ignores markup outside configured fields', () => {
   const parser = new StreamNormalizer();
-  assert.deepEqual(readProfile(parser.write('{"name":""}')).name, { value: '', status: 'complete' });
+  assert.deepEqual(readProfile(parser.write('{"name":""}')).name, {
+    value: '',
+    status: 'complete',
+  });
   const html = new StreamNormalizer({ format: 'html' });
-  assert.equal(readProfile(html.write('<script>window.pwned=true</script>')).name.status, 'pending');
+  assert.equal(
+    readProfile(html.write('<script>window.pwned=true</script>')).name.status,
+    'pending',
+  );
 });
 
 for (const format of ['xml', 'html'] as const) {
   test(`${format} skill items become complete independently of their parent`, () => {
     const parser = new StreamNormalizer({ format });
-    const source = format === 'xml' ? '<user><skills><skill>Design</skill><skill>Cod' : '<article><ul data-field="skills"><li>Design</li><li>Cod';
+    const source =
+      format === 'xml'
+        ? '<user><skills><skill>Design</skill><skill>Cod'
+        : '<article><ul data-field="skills"><li>Design</li><li>Cod';
     const result = readProfile(parser.write(source));
     assert.equal(result.skills.status, 'partial');
     assert.deepEqual(result.skills.itemStatus, ['complete', 'partial']);

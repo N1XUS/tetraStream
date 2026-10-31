@@ -6,12 +6,32 @@ import { seekStream } from '../src/seek-stream.ts';
 
 // Browser CSS.supports is injected at the projection boundary. These tests
 // exercise completion and scope policy, rather than reimplementing CSS parsing.
-const supports = (property: string, value: string) => property !== 'color' || value !== 'not-a-color';
-function snapshot(value: string, complete = true, property = 'color', selector = '.ai-card'): Snapshot<unknown> {
+const supports = (property: string, value: string) =>
+  property !== 'color' || value !== 'not-a-color';
+function snapshot(
+  value: string,
+  complete = true,
+  property = 'color',
+  selector = '.ai-card',
+): Snapshot<unknown> {
   return {
-    format: 'css', state: 'streaming',
-    data: { kind: 'stylesheet', nodes: [{ kind: 'rule', selector, nodes: [{ kind: 'declaration', property, value, important: false }] }] },
-    status: { '/nodes/0/selector': 'complete', '/nodes/0/nodes/0': complete ? 'complete' : 'partial', '/nodes/0/nodes/0/value': complete ? 'complete' : 'partial' },
+    format: 'css',
+    state: 'streaming',
+    data: {
+      kind: 'stylesheet',
+      nodes: [
+        {
+          kind: 'rule',
+          selector,
+          nodes: [{ kind: 'declaration', property, value, important: false }],
+        },
+      ],
+    },
+    status: {
+      '/nodes/0/selector': 'complete',
+      '/nodes/0/nodes/0': complete ? 'complete' : 'partial',
+      '/nodes/0/nodes/0/value': complete ? 'complete' : 'partial',
+    },
   };
 }
 
@@ -36,7 +56,11 @@ test('complete empty, absent, and unsupported values never become inline styles'
   for (const value of ['', '  ', 'not-a-color']) {
     assert.deepEqual(readCssPreview(snapshot(value), supports).style, {});
   }
-  assert.deepEqual(readCssPreview({ format: 'css', data: undefined, state: 'streaming', status: {} }, supports).style, {});
+  assert.deepEqual(
+    readCssPreview({ format: 'css', data: undefined, state: 'streaming', status: {} }, supports)
+      .style,
+    {},
+  );
   assert.deepEqual(readCssPreview({ ...snapshot('red'), status: {} }, supports).style, {});
 });
 
@@ -49,27 +73,68 @@ test('rewinding produces a fresh style projection with future properties removed
 });
 
 test('selectors and properties stay confined to one fixed preview element', () => {
-  for (const selector of ['body', '.ai-card, body', '.ai-card:hover', '#css-preview', '.ai-card *']) {
+  for (const selector of [
+    'body',
+    '.ai-card, body',
+    '.ai-card:hover',
+    '#css-preview',
+    '.ai-card *',
+  ]) {
     assert.deepEqual(readCssPreview(snapshot('red', true, 'color', selector), supports).style, {});
   }
-  for (const property of ['position', 'display', 'content', '--custom', 'background-image', 'animation', 'all']) {
+  for (const property of [
+    'position',
+    'display',
+    'content',
+    '--custom',
+    'background-image',
+    'animation',
+    'all',
+  ]) {
     assert.deepEqual(readCssPreview(snapshot('red', true, property), supports).style, {});
   }
 });
 
 test('URL, escaped, inherited-variable and resource-image values are blocked', () => {
-  for (const value of ['url(https://example.com/a.png)', 'u\\72l(https://example.com/a.png)', 'var(--remote)', 'image-set("https://example.com/a.png" 1x)', 'image("https://example.com/a.png")', 'red; display: none', 'red } body { color: blue']) {
-    assert.deepEqual(readCssPreview(snapshot(value, true, 'background'), () => true).style, {}, value);
+  for (const value of [
+    'url(https://example.com/a.png)',
+    'u\\72l(https://example.com/a.png)',
+    'var(--remote)',
+    'image-set("https://example.com/a.png" 1x)',
+    'image("https://example.com/a.png")',
+    'red; display: none',
+    'red } body { color: blue',
+  ]) {
+    assert.deepEqual(
+      readCssPreview(snapshot(value, true, 'background'), () => true).style,
+      {},
+      value,
+    );
   }
-  assert.deepEqual(readCssPreview(snapshot('linear-gradient(135deg, #fff6e5, #f2e8ff)', true, 'background'), () => true).style, { background: 'linear-gradient(135deg, #fff6e5, #f2e8ff)' });
+  assert.deepEqual(
+    readCssPreview(
+      snapshot('linear-gradient(135deg, #fff6e5, #f2e8ff)', true, 'background'),
+      () => true,
+    ).style,
+    { background: 'linear-gradient(135deg, #fff6e5, #f2e8ff)' },
+  );
 });
 
 test('completed duplicate declarations cascade while a growing replacement waits', () => {
   const source = snapshot('red');
-  source.data = { kind: 'stylesheet', nodes: [{ kind: 'rule', selector: '.ai-card', nodes: [
-    { kind: 'declaration', property: 'color', value: 'red', important: false },
-    { kind: 'declaration', property: 'color', value: 'blu', important: false },
-  ] }] };
+  source.data = {
+    kind: 'stylesheet',
+    nodes: [
+      {
+        kind: 'rule',
+        selector: '.ai-card',
+        nodes: [
+          { kind: 'declaration', property: 'color', value: 'red', important: false },
+          { kind: 'declaration', property: 'color', value: 'blu', important: false },
+        ],
+      },
+    ],
+  };
   source.status['/nodes/0/nodes/1'] = 'partial';
   source.status['/nodes/0/nodes/1/value'] = 'partial';
   assert.deepEqual(readCssPreview(source, supports).style, { color: 'red' });
@@ -79,11 +144,28 @@ test('completed duplicate declarations cascade while a growing replacement waits
 });
 
 test('nested rules and at-rules do not escape the fixed top-level styling contract', () => {
-  const source: Snapshot<unknown> = { format: 'css', state: 'complete', status: { '': 'complete' }, data: {
-    kind: 'stylesheet', nodes: [
-      { kind: 'at-rule', name: 'media', params: 'all', nodes: [{ kind: 'rule', selector: '.ai-card', nodes: [{ kind: 'declaration', property: 'color', value: 'red', important: false }] }] },
-    ],
-  } };
+  const source: Snapshot<unknown> = {
+    format: 'css',
+    state: 'complete',
+    status: { '': 'complete' },
+    data: {
+      kind: 'stylesheet',
+      nodes: [
+        {
+          kind: 'at-rule',
+          name: 'media',
+          params: 'all',
+          nodes: [
+            {
+              kind: 'rule',
+              selector: '.ai-card',
+              nodes: [{ kind: 'declaration', property: 'color', value: 'red', important: false }],
+            },
+          ],
+        },
+      ],
+    },
+  };
   assert.deepEqual(readCssPreview(source, supports).style, {});
 });
 
@@ -98,9 +180,25 @@ test('a value boundary alone cannot label an unfinished declaration complete', (
 
 test('only a stylesheet snapshot participates in the CSS preview', () => {
   assert.deepEqual(readCssPreview({ ...snapshot('red'), format: 'json' }, supports).style, {});
-  assert.deepEqual(readCssPreview({ ...snapshot('red'), data: { nodes: [{ kind: 'rule', selector: '.ai-card', nodes: [{ kind: 'declaration', property: 'color', value: 'red' }] }] } }, supports).style, {});
+  assert.deepEqual(
+    readCssPreview(
+      {
+        ...snapshot('red'),
+        data: {
+          nodes: [
+            {
+              kind: 'rule',
+              selector: '.ai-card',
+              nodes: [{ kind: 'declaration', property: 'color', value: 'red' }],
+            },
+          ],
+        },
+      },
+      supports,
+    ).style,
+    {},
+  );
 });
-
 
 test('the real CSS stream applies only closed declarations before document EOF', () => {
   const parser = new StreamNormalizer({ format: 'css' });
@@ -120,9 +218,13 @@ test('CSS playback rebuild removes future declarations and resets to neutral', (
   const position = cssStylingExample.indexOf('padding:') + 'padding: 3'.length;
   const middle = seekStream(cssStylingExample, 'css', position);
   assert.deepEqual(readCssPreview(middle.snapshot, () => true).style, {
-    background: 'linear-gradient(135deg, #fff6e5, #eee5ff)', color: '#382b59',
+    background: 'linear-gradient(135deg, #fff6e5, #eee5ff)',
+    color: '#382b59',
   });
-  assert.deepEqual(readCssPreview(seekStream(cssStylingExample, 'css', 0).snapshot, () => true).style, {});
+  assert.deepEqual(
+    readCssPreview(seekStream(cssStylingExample, 'css', 0).snapshot, () => true).style,
+    {},
+  );
 });
 
 test('important declarations are explicitly excluded while later normal declarations apply', () => {

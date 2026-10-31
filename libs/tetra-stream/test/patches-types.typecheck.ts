@@ -1,6 +1,21 @@
-import { StreamNormalizer, createPatchState, applyPatchBatch, select, type PatchBatch, type PatchState, type Pointer, type PathValue } from '../dist/index.js';
+import {
+  StreamNormalizer,
+  createPatchState,
+  applyPatchBatch,
+  select,
+  type PatchBatch,
+  type PatchState,
+  type Pointer,
+  type PathValue,
+} from '../dist/index.js';
 
-interface User { name: string; avatar: string; age: number; skills: string[]; nested: { city: string } }
+interface User {
+  name: string;
+  avatar: string;
+  age: number;
+  skills: string[];
+  nested: { city: string };
+}
 const parser = new StreamNormalizer<User>();
 const batch: PatchBatch = parser.writePatch('{"name":"Al');
 const state: PatchState<User> = createPatchState<User>();

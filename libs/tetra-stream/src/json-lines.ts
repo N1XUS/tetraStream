@@ -7,7 +7,10 @@ export class JsonLinesMachine {
   private readonly rows: JSONValue[] = [];
   private record: { state: MutableSnapshot; parser: JsonMachine; index: number } | undefined;
 
-  constructor(private readonly current: MutableSnapshot, private readonly maxDepth: number) {
+  constructor(
+    private readonly current: MutableSnapshot,
+    private readonly maxDepth: number,
+  ) {
     current.data = this.rows;
     setCompletion(current, '', 'partial');
   }
@@ -16,7 +19,8 @@ export class JsonLinesMachine {
     if (!this.record) return;
     const { state, index } = this.record;
     if (state.data !== undefined) this.rows[index] = state.data as JSONValue;
-    for (const [path, completion] of Object.entries(state.status)) setCompletion(this.current, `/${index}${path}`, completion);
+    for (const [path, completion] of Object.entries(state.status))
+      setCompletion(this.current, `/${index}${path}`, completion);
   }
 
   private finishRecord(): void {
@@ -29,20 +33,38 @@ export class JsonLinesMachine {
   write(chunk: string): void {
     try {
       for (const char of chunk) {
-        if (char === '\r' || char === '\n') { this.finishRecord(); continue; }
+        if (char === '\r' || char === '\n') {
+          this.finishRecord();
+          continue;
+        }
         if (!this.record) {
           if (char === ' ' || char === '\t') continue;
-          const state: MutableSnapshot = { format: 'json', data: undefined, status: {}, state: 'streaming' };
+          const state: MutableSnapshot = {
+            format: 'json',
+            data: undefined,
+            status: {},
+            state: 'streaming',
+          };
           forwardMutations(state, this.current, `/${this.rows.length}`);
-          this.record = { state, parser: new JsonMachine(state, this.maxDepth), index: this.rows.length };
+          this.record = {
+            state,
+            parser: new JsonMachine(state, this.maxDepth),
+            index: this.rows.length,
+          };
         }
         this.record.parser.write(char);
       }
-    } finally { this.sync(); }
+    } finally {
+      this.sync();
+    }
   }
 
   end(): void {
-    try { this.finishRecord(); } finally { this.sync(); }
+    try {
+      this.finishRecord();
+    } finally {
+      this.sync();
+    }
     setCompletion(this.current, '', 'complete');
   }
 }

@@ -4,7 +4,7 @@ import { StreamNormalizer } from 'tetra-stream';
 import * as binding from '../src/profile.ts';
 import { examples } from '../src/fixtures.ts';
 
-const avatar = '/avatars/alex-morgan.png';
+const avatar = '/avatars/alex-morgan.webp';
 const cases = [
   ['json', '{"avatar":"', '"', ',"bio":"Still writing'],
   ['yaml', 'avatar: "', '"\n', 'bio: Still writing'],
@@ -19,13 +19,21 @@ const cases = [
 
 for (const [format, prefix, delimiter, rest] of cases) {
   test(`${format} avatar image source is withheld until the URL value is complete`, () => {
-    assert.equal(typeof binding.readAvatarSource, 'function', 'the card needs a completion-gated image binding');
+    assert.equal(
+      typeof binding.readAvatarSource,
+      'function',
+      'the card needs a completion-gated image binding',
+    );
     const parser = new StreamNormalizer({ format });
     assert.equal(binding.readAvatarSource(parser.snapshot()), undefined);
     parser.write(prefix);
     for (const char of avatar) {
       const snapshot = parser.write(char);
-      assert.equal(binding.readAvatarSource(snapshot), undefined, 'even a valid-looking URL must wait for its closing boundary');
+      assert.equal(
+        binding.readAvatarSource(snapshot),
+        undefined,
+        'even a valid-looking URL must wait for its closing boundary',
+      );
     }
     const complete = parser.write(delimiter);
     assert.equal(binding.readAvatarSource(complete), avatar);
@@ -45,7 +53,10 @@ test('empty, non-string, and incomplete replacements never become avatar image s
   assert.equal(typeof binding.readAvatarSource, 'function');
   for (const value of ['', null, 42, {}, []]) {
     const parser = new StreamNormalizer();
-    assert.equal(binding.readAvatarSource(parser.write(JSON.stringify({ avatar: value }))), undefined);
+    assert.equal(
+      binding.readAvatarSource(parser.write(JSON.stringify({ avatar: value }))),
+      undefined,
+    );
   }
   const parser = new StreamNormalizer({ format: 'ndjson' });
   parser.write('{"avatar":"/avatars/first.png"}\n');
@@ -65,6 +76,10 @@ test('missing and unusable avatar values stop pending when no URL can still arri
   const interrupted = new StreamNormalizer();
   interrupted.write('{"avatar":"/avatars/alex');
   assert.equal(binding.isAvatarPending(interrupted.snapshot()), true);
-  try { interrupted.end(); } catch { /* An interrupted URL cannot finish. */ }
+  try {
+    interrupted.end();
+  } catch {
+    /* An interrupted URL cannot finish. */
+  }
   assert.equal(binding.isAvatarPending(interrupted.snapshot()), false);
 });

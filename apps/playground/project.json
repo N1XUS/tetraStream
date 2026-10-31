@@ -2,19 +2,12 @@
   "name": "playground",
   "projectType": "application",
   "sourceRoot": "apps/playground/src",
-  "implicitDependencies": [
-    "tetra-stream"
-  ],
-  "tags": [
-    "type:app",
-    "scope:demo"
-  ],
+  "implicitDependencies": ["tetra-stream"],
+  "tags": ["type:app", "scope:demo"],
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "^package-preview"
-      ],
+      "dependsOn": ["^package-preview"],
       "continuous": true,
       "options": {
         "command": "vite --config apps/playground/vite.config.ts --host 127.0.0.1 --port 5173"
@@ -22,13 +15,8 @@
     },
     "build": {
       "executor": "@rivetjs/nx:build",
-      "dependsOn": [
-        "^package-preview"
-      ],
-      "outputs": [
-        "{workspaceRoot}/dist/apps/playground",
-        "{projectRoot}/.wrangler/deploy"
-      ],
+      "dependsOn": ["^package-preview"],
+      "outputs": ["{workspaceRoot}/dist/apps/playground", "{projectRoot}/.wrangler/deploy"],
       "options": {
         "outputPath": "../../dist/apps/playground",
         "ssr": true,
@@ -43,27 +31,21 @@
     },
     "test": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "options": {
         "command": "node --test apps/playground/test/*.test.ts"
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "options": {
         "command": "tsc -p apps/playground/tsconfig.json"
       }
     },
     "deploy": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "options": {
         "command": "wrangler deploy --config ../../dist/apps/playground/cloudflare/wrangler.json",
         "cwd": "apps/playground"
@@ -71,9 +53,7 @@
     },
     "serve": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "continuous": true,
       "cache": false,
       "options": {

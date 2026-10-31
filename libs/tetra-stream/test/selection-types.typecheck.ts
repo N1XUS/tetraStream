@@ -78,12 +78,16 @@ select(snapshot, '/a/b/~key');
 select(snapshot, '/name', { when: 'closed' });
 
 type Assert<T extends true> = T;
-type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+type Equal<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 type ArrayLeaf = Assert<Equal<PathValue<Model, '/people/0/name'>, string>>;
 type EscapedLeaf = Assert<Equal<PathValue<Model, '/a~1b/~0key'>, string>>;
 type Root = Assert<Equal<PathValue<Model, ''>, Model>>;
 type Union = Assert<Equal<PathValue<{ data: { a: string } | { b: number } }, '/data/a'>, string>>;
-interface Recursive { value: string; child: Recursive }
+interface Recursive {
+  value: string;
+  child: Recursive;
+}
 const bounded: Pointer<Recursive> = '/child/child/child/child/child/child/child/value';
 // @ts-expect-error Typed pointers have an eight-segment recursion bound.
 const tooDeep: Pointer<Recursive> = '/child/child/child/child/child/child/child/child/value';

@@ -3,7 +3,14 @@ import assert from 'node:assert/strict';
 import { StreamNormalizer } from 'tetra-stream';
 import * as binding from '../src/csv-grid.ts';
 
-function grid(parser: StreamNormalizer, chunk: string) { assert.equal(typeof binding.readCsvGrid, 'function', 'the streaming table projection is required'); return binding.readCsvGrid(parser.write(chunk)); }
+function grid(parser: StreamNormalizer, chunk: string) {
+  assert.equal(
+    typeof binding.readCsvGrid,
+    'function',
+    'the streaming table projection is required',
+  );
+  return binding.readCsvGrid(parser.write(chunk));
+}
 
 test('CSV grid exposes growing headers and cells with stable positional identities', () => {
   const parser = new StreamNormalizer({ format: 'csv' });
@@ -14,7 +21,14 @@ test('CSV grid exposes growing headers and cells with stable positional identiti
   assert.equal(first.rows.length, 1);
   assert.equal(first.rows[0].id, 'row-1');
   assert.equal(first.rows[0].status, 'partial');
-  assert.deepEqual(first.rows[0].cells.map(({ value, status }) => [value, status]), [['Alex', 'complete'], ['Des', 'partial'], [undefined, 'pending']]);
+  assert.deepEqual(
+    first.rows[0].cells.map(({ value, status }) => [value, status]),
+    [
+      ['Alex', 'complete'],
+      ['Des', 'partial'],
+      [undefined, 'pending'],
+    ],
+  );
   const next = grid(parser, 'igner,Product\nSam,Engineer,');
   assert.equal(next.rows[0].id, first.rows[0].id);
   assert.equal(next.rows[0].status, 'complete');
@@ -26,15 +40,40 @@ test('CSV grid exposes growing headers and cells with stable positional identiti
 test('CSV grid distinguishes complete empty cells from cells omitted in a finished short row', () => {
   const parser = new StreamNormalizer({ format: 'csv' });
   const result = grid(parser, 'Name,Role,Team\nAlex,,\nSam\n');
-  assert.deepEqual(result.rows[0].cells.map(({ value, status }) => [value, status]), [['Alex', 'complete'], ['', 'complete'], ['', 'complete']]);
-  assert.deepEqual(result.rows[1].cells.map(({ value, status }) => [value, status]), [['Sam', 'complete'], [undefined, 'missing'], [undefined, 'missing']]);
+  assert.deepEqual(
+    result.rows[0].cells.map(({ value, status }) => [value, status]),
+    [
+      ['Alex', 'complete'],
+      ['', 'complete'],
+      ['', 'complete'],
+    ],
+  );
+  assert.deepEqual(
+    result.rows[1].cells.map(({ value, status }) => [value, status]),
+    [
+      ['Sam', 'complete'],
+      [undefined, 'missing'],
+      [undefined, 'missing'],
+    ],
+  );
 });
 
 test('duplicate and blank headers remain separate columns and extra cells are retained', () => {
   const parser = new StreamNormalizer({ format: 'csv' });
   const result = grid(parser, 'Name,Name,\nA,B,C,D\n');
-  assert.deepEqual(result.columns.map(({ id, label }) => [id, label]), [['column-0', 'Name'], ['column-1', 'Name'], ['column-2', 'Column 3'], ['column-3', 'Column 4']]);
-  assert.deepEqual(result.rows[0].cells.map(cell => cell.value), ['A', 'B', 'C', 'D']);
+  assert.deepEqual(
+    result.columns.map(({ id, label }) => [id, label]),
+    [
+      ['column-0', 'Name'],
+      ['column-1', 'Name'],
+      ['column-2', 'Column 3'],
+      ['column-3', 'Column 4'],
+    ],
+  );
+  assert.deepEqual(
+    result.rows[0].cells.map((cell) => cell.value),
+    ['A', 'B', 'C', 'D'],
+  );
 });
 
 test('quoted comma, escaped quote, and newline render inside a growing cell', () => {
@@ -70,6 +109,6 @@ test('CSV table fixture survives every two-chunk split without losing rows or st
     assert.equal(result.rows.length, 6, `split ${split}`);
     assert.equal(result.completeRows, 6);
     assert.equal(result.rows[0].cells[0].value, 'Alex Morgan');
-    assert.ok(result.rows.every(row => row.cells.every(cell => cell.status === 'complete')));
+    assert.ok(result.rows.every((row) => row.cells.every((cell) => cell.status === 'complete')));
   }
 });

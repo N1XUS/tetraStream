@@ -21,7 +21,9 @@
     "release:dry-run": "nx release version --first-release --dry-run --git-commit=false --git-tag=false --stage-changes=false",
     "release": "nx release",
     "benchmark": "nx run tetra-stream:benchmark",
-    "serve": "nx run playground:serve"
+    "serve": "nx run playground:serve",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@nx/js": "^23.3.1",
@@ -36,6 +38,7 @@
     "@types/node": "^26.6.6",
     "lucide": "^1.66.0",
     "nx": "^23.3.1",
+    "prettier": "^3.9.10",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "vite": "^8.3.5",

@@ -7,7 +7,16 @@ import { at, record } from './helpers.ts';
 test('CSS exposes growing declaration values and only commits actual boundaries', () => {
   const parser = new StreamNormalizer<CssDocument>({ format: 'css' });
   let snapshot = parser.write('.ai-card { color: re');
-  assert.deepEqual(snapshot.data, { kind: 'stylesheet', nodes: [{ kind: 'rule', selector: '.ai-card', nodes: [{ kind: 'declaration', property: 'color', value: 're', important: false }] }] });
+  assert.deepEqual(snapshot.data, {
+    kind: 'stylesheet',
+    nodes: [
+      {
+        kind: 'rule',
+        selector: '.ai-card',
+        nodes: [{ kind: 'declaration', property: 'color', value: 're', important: false }],
+      },
+    ],
+  });
   assert.equal(snapshot.status['/nodes/0/selector'], 'complete');
   assert.equal(snapshot.status['/nodes/0/nodes/0/property'], 'complete');
   assert.equal(snapshot.status['/nodes/0/nodes/0/value'], 'partial');
@@ -26,32 +35,48 @@ test('CSS exposes growing declaration values and only commits actual boundaries'
 });
 
 test('CSS tokenization preserves delimiters inside strings, URLs, functions and comments', () => {
-  const source = '/* ; } */.ai-card { content: "a; } \\" b"; background: url("data:image/svg+xml;a={b}"); width: calc(10px + var(--gap, 2px)); --payload: {x:y; z:w}; }';
+  const source =
+    '/* ; } */.ai-card { content: "a; } \\" b"; background: url("data:image/svg+xml;a={b}"); width: calc(10px + var(--gap, 2px)); --payload: {x:y; z:w}; }';
   const parser = new StreamNormalizer<CssDocument>({ format: 'css' });
   for (const char of source) parser.write(char);
   const snapshot = parser.end();
   assert.equal(at(snapshot.data, 'nodes', 0, 'kind'), 'comment');
   assert.equal(at(snapshot.data, 'nodes', 1, 'nodes', 0, 'value'), '"a; } \\" b"');
-  assert.equal(at(snapshot.data, 'nodes', 1, 'nodes', 1, 'value'), 'url("data:image/svg+xml;a={b}")');
+  assert.equal(
+    at(snapshot.data, 'nodes', 1, 'nodes', 1, 'value'),
+    'url("data:image/svg+xml;a={b}")',
+  );
   assert.equal(at(snapshot.data, 'nodes', 1, 'nodes', 2, 'value'), 'calc(10px + var(--gap, 2px))');
   assert.equal(at(snapshot.data, 'nodes', 1, 'nodes', 3, 'value'), '{x:y; z:w}');
-  assert.ok(Object.values(snapshot.status).every(status => status === 'complete'));
+  assert.ok(Object.values(snapshot.status).every((status) => status === 'complete'));
 });
 
 test('CSS retains ordered at-rules, nested rules, comments and important declarations', () => {
   const parser = new StreamNormalizer<CssDocument>({ format: 'css' });
-  parser.write('@import url("a;b.css"); @media (min-width: 1px) { .ai-card { /* note */ color: red !important; &:hover { opacity: .8 } } }');
+  parser.write(
+    '@import url("a;b.css"); @media (min-width: 1px) { .ai-card { /* note */ color: red !important; &:hover { opacity: .8 } } }',
+  );
   const snapshot = parser.end();
   assert.equal(at(snapshot.data, 'nodes', 0, 'kind'), 'at-rule');
   assert.equal(at(snapshot.data, 'nodes', 0, 'name'), 'import');
   assert.equal(at(snapshot.data, 'nodes', 1, 'nodes', 0, 'selector'), '.ai-card');
-  assert.deepEqual(at(snapshot.data, 'nodes', 1, 'nodes', 0, 'nodes', 1), { kind: 'declaration', property: 'color', value: 'red', important: true });
+  assert.deepEqual(at(snapshot.data, 'nodes', 1, 'nodes', 0, 'nodes', 1), {
+    kind: 'declaration',
+    property: 'color',
+    value: 'red',
+    important: true,
+  });
   assert.equal(at(snapshot.data, 'nodes', 1, 'nodes', 0, 'nodes', 2, 'selector'), '&:hover');
-  assert.ok(Object.values(snapshot.status).every(status => status === 'complete'));
+  assert.ok(Object.values(snapshot.status).every((status) => status === 'complete'));
 });
 
 test('CSS recovery never completes synthetic closings, unfinished comments, or value tokens', () => {
-  for (const source of ['.ai-card{color:red', '.ai-card{content:"red;}', '.ai-card{width:calc(1px + 2px', '.ai-card{/* unfinished']) {
+  for (const source of [
+    '.ai-card{color:red',
+    '.ai-card{content:"red;}',
+    '.ai-card{width:calc(1px + 2px',
+    '.ai-card{/* unfinished',
+  ]) {
     const parser = new StreamNormalizer<CssDocument>({ format: 'css' });
     const snapshot = parser.write(source);
     assert.equal(snapshot.status['/nodes/0'], 'partial', source);
@@ -62,7 +87,12 @@ test('CSS recovery never completes synthetic closings, unfinished comments, or v
 });
 
 test('CSS validates original syntax at EOF while preserving the last partial snapshot', () => {
-  for (const source of ['.a { broken }', '.a { color: red background: blue }', '.a { color: red }}', 'not-a-rule']) {
+  for (const source of [
+    '.a { broken }',
+    '.a { color: red background: blue }',
+    '.a { color: red }}',
+    'not-a-rule',
+  ]) {
     const parser = new StreamNormalizer<CssDocument>({ format: 'css' });
     parser.write(source);
     assert.throws(() => parser.end(), Error, source);
@@ -132,7 +162,10 @@ test('CSS recovery cannot commit declarations separated by an invented semicolon
   assert.equal(snapshot.status['/nodes/0/nodes/1/value'], 'partial');
   assert.equal(snapshot.status['/nodes/0/nodes/2/value'], 'partial');
   assert.throws(() => parser.end(), SyntaxError);
-  assert.equal(select(parser.snapshot(), '/nodes/0/nodes/0/value', { when: 'complete' }).status, 'complete');
+  assert.equal(
+    select(parser.snapshot(), '/nodes/0/nodes/0/value', { when: 'complete' }).status,
+    'complete',
+  );
 });
 
 test('CSS parse errors remain drainable through patch replay', () => {
@@ -187,15 +220,23 @@ test('CSS lexical boundaries distinguish escaped braces and URL contents from re
 test('CSS custom-property token blocks stay one declaration before and after EOF', () => {
   const parser = new StreamNormalizer<CssDocument>({ format: 'css' });
   const snapshot = parser.write('a{--x:{a:b;};}');
-  assert.deepEqual(at(snapshot.data, 'nodes', 0, 'nodes'), [{ kind: 'declaration', property: '--x', value: '{a:b;}', important: false }]);
-  assert.deepEqual(select(snapshot, '/nodes/0/nodes/0/value', { when: 'complete' }), { status: 'complete', state: 'streaming', value: '{a:b;}' });
+  assert.deepEqual(at(snapshot.data, 'nodes', 0, 'nodes'), [
+    { kind: 'declaration', property: '--x', value: '{a:b;}', important: false },
+  ]);
+  assert.deepEqual(select(snapshot, '/nodes/0/nodes/0/value', { when: 'complete' }), {
+    status: 'complete',
+    state: 'streaming',
+    value: '{a:b;}',
+  });
   assert.deepEqual(parser.end().data, snapshot.data);
 });
 
 test('CSS nested custom-property block prefixes never fabricate completed sibling declarations', () => {
   const parser = new StreamNormalizer<CssDocument>({ format: 'css' });
   let snapshot = parser.write('a{--x:{a:{b:c;');
-  assert.deepEqual(at(snapshot.data, 'nodes', 0, 'nodes'), [{ kind: 'declaration', property: '--x', value: '{a:{b:c;', important: false }]);
+  assert.deepEqual(at(snapshot.data, 'nodes', 0, 'nodes'), [
+    { kind: 'declaration', property: '--x', value: '{a:{b:c;', important: false },
+  ]);
   assert.equal(snapshot.status['/nodes/0/nodes/0/value'], 'partial');
   snapshot = parser.write('}};color:r');
   assert.deepEqual(at(snapshot.data, 'nodes', 0, 'nodes'), [

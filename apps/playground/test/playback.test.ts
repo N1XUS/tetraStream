@@ -22,7 +22,17 @@ test('rewinding removes future values and withholds an unfinished avatar URL', (
 
 test('seeking to the end finalizes each supported profile format; zero restores pending fields', () => {
   assert.equal(typeof playback.seekStream, 'function');
-  for (const format of ['json', 'yaml', 'yml', 'xml', 'html', 'ndjson', 'jsonl', 'csv', 'tsv'] as const) {
+  for (const format of [
+    'json',
+    'yaml',
+    'yml',
+    'xml',
+    'html',
+    'ndjson',
+    'jsonl',
+    'csv',
+    'tsv',
+  ] as const) {
     const full = playback.seekStream(examples[format], format, examples[format].length);
     assert.equal(full.snapshot.state, 'complete', format);
     assert.equal(readProfile(full.snapshot).name.value, 'Alex Morgan', format);
@@ -35,7 +45,10 @@ test('seeking to the end finalizes each supported profile format; zero restores 
 test('CSV seeking removes future rows and keeps an unfinished cell partial', () => {
   assert.equal(typeof playback.seekStream, 'function');
   const source = 'Name,Role\nAlex,Designer\nSam,Engineer';
-  assert.equal(readCsvGrid(playback.seekStream(source, 'csv', source.length).snapshot).rows.length, 2);
+  assert.equal(
+    readCsvGrid(playback.seekStream(source, 'csv', source.length).snapshot).rows.length,
+    2,
+  );
   const midway = playback.seekStream(source, 'csv', 14); // Name,Role\nAlex
   const grid = readCsvGrid(midway.snapshot);
   assert.equal(grid.rows.length, 1);

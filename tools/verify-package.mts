@@ -6,31 +6,66 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const workspace = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const manifest: unknown = JSON.parse(readFileSync(join(workspace, 'libs/tetra-stream/package.json'), 'utf8'));
-assert.ok(manifest !== null && typeof manifest === 'object' && 'version' in manifest && typeof manifest.version === 'string');
+const manifest: unknown = JSON.parse(
+  readFileSync(join(workspace, 'libs/tetra-stream/package.json'), 'utf8'),
+);
+assert.ok(
+  manifest !== null &&
+    typeof manifest === 'object' &&
+    'version' in manifest &&
+    typeof manifest.version === 'string',
+);
 const archive = join(workspace, 'artifacts', `tetra-stream-${manifest.version}.tgz`);
 const packageSpec = process.env.TETRA_PACKAGE_SPEC ?? archive;
-if (packageSpec === archive) assert.ok(existsSync(archive), 'Build the tarball with npm run pack first');
+if (packageSpec === archive)
+  assert.ok(existsSync(archive), 'Build the tarball with npm run pack first');
 const consumer = mkdtempSync(join(tmpdir(), 'tetra-consumer-'));
 
 function run(command: string, args: string[]) {
-  const result = spawnSync(command, args, { cwd: consumer, stdio: 'inherit', shell: process.platform === 'win32' });
+  const result = spawnSync(command, args, {
+    cwd: consumer,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
   if (result.error) throw result.error;
   assert.equal(result.status, 0, `${command} failed in ${consumer}`);
 }
 
 try {
-  writeFileSync(join(consumer, 'package.json'), JSON.stringify({ name: 'tetra-package-check', private: true, type: 'module' }));
-  run('npm', ['install', packageSpec, 'zod@4', '--ignore-scripts', '--omit=dev', '--no-audit', '--no-fund']);
+  writeFileSync(
+    join(consumer, 'package.json'),
+    JSON.stringify({ name: 'tetra-package-check', private: true, type: 'module' }),
+  );
+  run('npm', [
+    'install',
+    packageSpec,
+    'zod@4',
+    '--ignore-scripts',
+    '--omit=dev',
+    '--no-audit',
+    '--no-fund',
+  ]);
   const installed = join(consumer, 'node_modules/tetra-stream');
   const packed: unknown = JSON.parse(readFileSync(join(installed, 'package.json'), 'utf8'));
   assert.ok(packed !== null && typeof packed === 'object' && 'dependencies' in packed);
   assert.ok(packed.dependencies !== null && typeof packed.dependencies === 'object');
-  assert.deepEqual(Object.keys(packed.dependencies).sort(), ['htmlparser2', 'postcss', 'postcss-safe-parser', 'saxes', 'yaml']);
+  assert.deepEqual(Object.keys(packed.dependencies).sort(), [
+    'htmlparser2',
+    'postcss',
+    'postcss-safe-parser',
+    'saxes',
+    'yaml',
+  ]);
   for (const excluded of ['src', 'test', 'apps', 'node_modules/@rivetjs']) {
-    assert.equal(existsSync(join(installed, excluded)), false, `${excluded} must not be distributed`);
+    assert.equal(
+      existsSync(join(installed, excluded)),
+      false,
+      `${excluded} must not be distributed`,
+    );
   }
-  writeFileSync(join(consumer, 'consumer-runtime.mts'), `
+  writeFileSync(
+    join(consumer, 'consumer-runtime.mts'),
+    `
     import assert from 'node:assert/strict';
     import { Format, StreamNormalizer, streamStructured, streamPatches, createPatchState, applyPatchBatch, select, validateSnapshot, streamValidated } from 'tetra-stream';
     import type { CssDocument, LanguageStrategy } from 'tetra-stream';
@@ -107,8 +142,11 @@ try {
     const invalid = await validateSnapshot({ format: 'json', state: 'complete', data: {}, status: { '': 'complete' } }, schema);
     assert.equal(invalid.status, 'invalid');
     console.log('Packed ESM formats including CSS, patches, selections and real Zod 4 validation passed.');
-  `);
-  writeFileSync(join(consumer, 'consumer.mts'), `
+  `,
+  );
+  writeFileSync(
+    join(consumer, 'consumer.mts'),
+    `
     import { Format, StreamNormalizer, streamStructured, streamValidated, streamPatches, createPatchState, applyPatchBatch, select, type Snapshot } from 'tetra-stream';
     import type { CssDocument, LanguageStrategy } from 'tetra-stream';
     import { z } from 'zod';
@@ -148,8 +186,26 @@ try {
       void inputAge;
     }
     void [name, city];
-  `);
-  run(process.execPath, [join(workspace, 'node_modules/typescript/bin/tsc'), '--noEmit', '--strict', '--skipLibCheck', '--module', 'NodeNext', '--moduleResolution', 'NodeNext', '--target', 'ES2022', '--lib', 'ES2022,DOM', '--typeRoots', join(workspace, 'node_modules/@types'), 'consumer.mts', 'consumer-runtime.mts']);
+  `,
+  );
+  run(process.execPath, [
+    join(workspace, 'node_modules/typescript/bin/tsc'),
+    '--noEmit',
+    '--strict',
+    '--skipLibCheck',
+    '--module',
+    'NodeNext',
+    '--moduleResolution',
+    'NodeNext',
+    '--target',
+    'ES2022',
+    '--lib',
+    'ES2022,DOM',
+    '--typeRoots',
+    join(workspace, 'node_modules/@types'),
+    'consumer.mts',
+    'consumer-runtime.mts',
+  ]);
   run(process.execPath, ['consumer-runtime.mts']);
   console.log('Packed TypeScript declarations and runtime passed in an isolated consumer.');
 } finally {

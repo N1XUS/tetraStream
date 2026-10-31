@@ -1,44 +1,179 @@
-.css-demo { margin-top: 96px; scroll-margin-top: 24px; }
-.css-demo .section-heading { gap: 24px; }
-.css-play-controls { display: flex; align-items: center; gap: 8px; }
-.css-workspace { display: grid; grid-template-columns: 1fr 1fr; }
-.css-source-panel, .css-preview-panel { min-width: 0; padding: 24px; }
-.css-source-panel { border-right: 1px solid var(--separator); }
-.css-demo .css-source-window { height: 410px; }
-.css-demo .css-source-window > .code-block__code { min-height: 0; flex: 1; }
-.css-preview-stage { display: flex; align-items: center; justify-content: center; min-height: 354px; padding: 32px; border-radius: var(--radius-2xl); background-color: var(--surface-secondary, var(--surface)); background-image: radial-gradient(var(--separator) .8px, transparent .8px); background-size: 16px 16px; }
-.css-preview-card { width: 100%; max-width: 340px; min-width: 0; padding: 24px; border: 1px solid var(--border); border-radius: 8px; color: var(--foreground); background: var(--background); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.css-demo {
+  margin-top: 96px;
+  scroll-margin-top: 24px;
+}
+.css-demo .section-heading {
+  gap: 24px;
+}
+.css-play-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.css-workspace {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.css-source-panel,
+.css-preview-panel {
+  min-width: 0;
+  padding: 24px;
+}
+.css-source-panel {
+  border-right: 1px solid var(--separator);
+}
+.css-demo .css-source-window {
+  height: 410px;
+}
+.css-demo .css-source-window > .code-block__code {
+  min-height: 0;
+  flex: 1;
+}
+.css-preview-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 354px;
+  padding: 32px;
+  border-radius: var(--radius-2xl);
+  background-color: var(--surface-secondary, var(--surface));
+  background-image: radial-gradient(var(--separator) 0.8px, transparent 0.8px);
+  background-size: 16px 16px;
+}
+.css-preview-card {
+  width: 100%;
+  max-width: 340px;
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--foreground);
+  background: var(--background);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
 /* Keep motion owned by the preview, outside generated CSS. */
 .css-preview-card {
-  transition: color 480ms ease, background-color 480ms ease, padding 480ms ease,
-    border-radius 480ms ease, border-color 480ms ease, border-width 480ms ease,
-    box-shadow 480ms ease, font-size 480ms ease, font-weight 480ms ease,
-    letter-spacing 480ms ease, line-height 480ms ease;
+  transition:
+    color 480ms ease,
+    background-color 480ms ease,
+    padding 480ms ease,
+    border-radius 480ms ease,
+    border-color 480ms ease,
+    border-width 480ms ease,
+    box-shadow 480ms ease,
+    font-size 480ms ease,
+    font-weight 480ms ease,
+    letter-spacing 480ms ease,
+    line-height 480ms ease;
 }
-.css-card-kicker { display: flex; align-items: center; gap: 7px; font-size: 9px; font-weight: 650; letter-spacing: 1.1px; }
-.css-card-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.css-preview-card h3 { margin: 24px 0 14px; font-size: 2em; font-weight: 550; line-height: 1.08; letter-spacing: -.045em; }
-.css-preview-card p { margin: 0; font-size: .82em; opacity: .78; }
-.css-card-footer { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 26px; font-size: .68em; }
-.css-preview-caption { display: flex; align-items: flex-start; justify-content: center; gap: 6px; margin: 16px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
-.css-preview-caption svg { flex-shrink: 0; margin-top: 2px; }
-.css-declaration-inspector { margin-top: 20px; }
-.css-declaration-details { display: flex; align-items: center; gap: 12px; max-width: 100%; }
-.css-declarations code { min-width: 0; font-size: 11px; overflow-wrap: anywhere; }
-.css-declaration-details > .chip { flex-shrink: 0; }
+.css-card-kicker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 1.1px;
+}
+.css-card-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.css-preview-card h3 {
+  margin: 24px 0 14px;
+  font-size: 2em;
+  font-weight: 550;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+}
+.css-preview-card p {
+  margin: 0;
+  font-size: 0.82em;
+  opacity: 0.78;
+}
+.css-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 26px;
+  font-size: 0.68em;
+}
+.css-preview-caption {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.css-preview-caption svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.css-declaration-inspector {
+  margin-top: 20px;
+}
+.css-declaration-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+}
+.css-declarations code {
+  min-width: 0;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.css-declaration-details > .chip {
+  flex-shrink: 0;
+}
 @media (max-width: 800px) {
-  .css-workspace { grid-template-columns: 1fr; }
-  .css-source-panel { border-right: 0; border-bottom: 1px solid var(--separator); }
-  .css-demo .css-source-window { height: 310px; }
-  .css-demo .section-heading, .css-toolbar { align-items: flex-start; flex-direction: column; }
-  .css-demo .section-heading > .chip { align-self: flex-start; }
-  .css-demo { margin-top: 64px; }
+  .css-workspace {
+    grid-template-columns: 1fr;
+  }
+  .css-source-panel {
+    border-right: 0;
+    border-bottom: 1px solid var(--separator);
+  }
+  .css-demo .css-source-window {
+    height: 310px;
+  }
+  .css-demo .section-heading,
+  .css-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .css-demo .section-heading > .chip {
+    align-self: flex-start;
+  }
+  .css-demo {
+    margin-top: 64px;
+  }
 }
 @media (max-width: 480px) {
-  .css-source-panel, .css-preview-panel { padding: 18px; }
-  .css-preview-stage { padding: 20px; }
-  .css-play-controls { flex-wrap: wrap; }
+  .css-source-panel,
+  .css-preview-panel {
+    padding: 18px;
+  }
+  .css-preview-stage {
+    padding: 20px;
+  }
+  .css-play-controls {
+    flex-wrap: wrap;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .css-demo *, .css-demo *::before, .css-demo *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .css-demo *,
+  .css-demo *::before,
+  .css-demo *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

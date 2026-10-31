@@ -14,7 +14,10 @@ export declare namespace StandardSchemaV1 {
   interface Props<Input = unknown, Output = Input> {
     readonly version: 1;
     readonly vendor: string;
-    readonly validate: (value: unknown, options?: Options | undefined) => Result<Output> | Promise<Result<Output>>;
+    readonly validate: (
+      value: unknown,
+      options?: Options | undefined,
+    ) => Result<Output> | Promise<Result<Output>>;
     readonly types?: Types<Input, Output> | undefined;
   }
   interface Options {
@@ -39,8 +42,12 @@ export declare namespace StandardSchemaV1 {
     readonly input: Input;
     readonly output: Output;
   }
-  type InferInput<Schema extends StandardSchemaV1> = NonNullable<Schema['~standard']['types']>['input'];
-  type InferOutput<Schema extends StandardSchemaV1> = NonNullable<Schema['~standard']['types']>['output'];
+  type InferInput<Schema extends StandardSchemaV1> = NonNullable<
+    Schema['~standard']['types']
+  >['input'];
+  type InferOutput<Schema extends StandardSchemaV1> = NonNullable<
+    Schema['~standard']['types']
+  >['output'];
 }
 
 export type InferInput<Schema extends StandardSchemaV1> = StandardSchemaV1.InferInput<Schema>;
