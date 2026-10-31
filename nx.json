@@ -1,0 +1,75 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "defaultBase": "main",
+  "plugins": [
+    {
+      "plugin": "@rivetjs/nx/plugin",
+      "include": [
+        "apps/playground/**"
+      ]
+    }
+  ],
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "!{projectRoot}/dist/**/*",
+      "sharedGlobals"
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/test/**/*"
+    ],
+    "sharedGlobals": [
+      "{workspaceRoot}/package-lock.json",
+      "{workspaceRoot}/tsconfig.base.json"
+    ]
+  },
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production"
+      ]
+    },
+    "test": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^production"
+      ]
+    },
+    "typecheck": {
+      "cache": true
+    },
+    "nx-release-publish": {
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "packageRoot": "libs/tetra-stream",
+        "access": "public"
+      }
+    }
+  },
+  "release": {
+    "projects": [
+      "tetra-stream"
+    ],
+    "projectsRelationship": "independent",
+    "releaseTag": {
+      "pattern": "{projectName}@{version}"
+    },
+    "version": {
+      "currentVersionResolver": "disk",
+      "manifestRootsToUpdate": [
+        "{projectRoot}"
+      ]
+    },
+    "changelog": {
+      "workspaceChangelog": false,
+      "projectChangelogs": true
+    }
+  },
+  "analytics": false
+}

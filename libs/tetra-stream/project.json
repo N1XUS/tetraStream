@@ -1,0 +1,92 @@
+{
+  "name": "tetra-stream",
+  "projectType": "library",
+  "sourceRoot": "libs/tetra-stream/src",
+  "tags": [
+    "type:library",
+    "scope:public"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
+      "options": {
+        "command": "tsc -p libs/tetra-stream/tsconfig.lib.json"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "command": "node --test libs/tetra-stream/test/*.test.ts"
+      },
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/tools/pack-library.mts"
+      ]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "command": "tsc -p libs/tetra-stream/tsconfig.lib.json --noEmit && tsc -p libs/tetra-stream/tsconfig.types.json && tsc -p libs/tetra-stream/tsconfig.tools.json"
+      },
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/tools/**/*.mts"
+      ]
+    },
+    "pack": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "test"
+      ],
+      "options": {
+        "command": "node tools/pack-library.mts"
+      },
+      "inputs": [
+        "default",
+        "{workspaceRoot}/tools/pack-library.mts"
+      ],
+      "outputs": [
+        "{workspaceRoot}/artifacts/tetra-stream-*.tgz",
+        "{workspaceRoot}/apps/playground/public/downloads/tetra-stream.tgz"
+      ]
+    },
+    "benchmark": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "command": "node --expose-gc libs/tetra-stream/bench/stream.mts"
+      }
+    },
+    "package-preview": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": [
+        "build"
+      ],
+      "inputs": [
+        "production",
+        "{workspaceRoot}/tools/pack-library.mts"
+      ],
+      "outputs": [
+        "{workspaceRoot}/artifacts/tetra-stream-*.tgz",
+        "{workspaceRoot}/apps/playground/public/downloads/tetra-stream.tgz"
+      ],
+      "options": {
+        "command": "node tools/pack-library.mts"
+      }
+    }
+  }
+}

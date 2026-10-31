@@ -1,0 +1,66 @@
+{
+  "name": "tetra-stream",
+  "version": "0.1.0",
+  "description": "Progressively parse JSON, YAML, XML, HTML, JSON Lines, CSV and TSV with explicit partial and complete states.",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "streaming",
+    "json",
+    "yaml",
+    "yml",
+    "ndjson",
+    "jsonl",
+    "csv",
+    "tsv",
+    "xml",
+    "html",
+    "llm",
+    "partial-json",
+    "typescript"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
+    "test": "npm run build && node --test test/*.test.ts",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "htmlparser2": "^10.0.0",
+    "postcss": "^8.5.32",
+    "postcss-safe-parser": "^7.1.0",
+    "saxes": "^6.0.0",
+    "yaml": "^2.9.1"
+  },
+  "author": "N1XUS",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/N1XUS/tetraStream.git",
+    "directory": "libs/tetra-stream"
+  },
+  "bugs": {
+    "url": "https://github.com/N1XUS/tetraStream/issues"
+  },
+  "homepage": "https://github.com/N1XUS/tetraStream#readme"
+}

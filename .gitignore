@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.nx/
+.rivet/
+.DS_Store
+artifacts/
+
+# Generated downloadable package; recreated by the Nx package-preview target.
+apps/playground/public/downloads/*.tgz
+apps/playground/public/downloads/*.tmp
+
+# Local environment, editor state, and private implementation notes.
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+*.log
+*.tsbuildinfo
+coverage/
+docs/superpowers/

@@ -1,0 +1,51 @@
+{
+  "name": "tetra-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "libs/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "nx run playground:dev",
+    "build": "nx run-many -t build",
+    "build:lib": "nx run tetra-stream:build",
+    "test": "nx run-many -t test",
+    "typecheck": "nx run-many -t typecheck",
+    "pack": "nx run tetra-stream:pack",
+    "verify:package": "nx run tetra-stream:pack && node tools/verify-package.mts",
+    "release:dry-run": "nx release version --first-release --dry-run --git-commit=false --git-tag=false --stage-changes=false",
+    "release": "nx release",
+    "benchmark": "nx run tetra-stream:benchmark"
+  },
+  "devDependencies": {
+    "@nx/js": "^23.3.1",
+    "@rivetjs/compiler": "^0.1.0-alpha.2",
+    "@rivetjs/kit": "^0.1.0-alpha.2",
+    "@rivetjs/nx": "^0.1.0-alpha.2",
+    "@rivetjs/reactivity": "^0.1.0-alpha.2",
+    "@rivetjs/runtime": "^0.1.0-alpha.2",
+    "@rivetjs/ui": "^0.1.0-alpha.2",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.6",
+    "lucide": "^1.66.0",
+    "nx": "^23.3.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5"
+  },
+  "description": "Streaming structured data for AI interfaces: TypeScript library, live demos, and usage guide.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/N1XUS/tetraStream.git"
+  },
+  "bugs": {
+    "url": "https://github.com/N1XUS/tetraStream/issues"
+  },
+  "homepage": "https://github.com/N1XUS/tetraStream#readme"
+}

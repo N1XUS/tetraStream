@@ -1,0 +1,60 @@
+{
+  "name": "playground",
+  "projectType": "application",
+  "sourceRoot": "apps/playground/src",
+  "implicitDependencies": [
+    "tetra-stream"
+  ],
+  "tags": [
+    "type:app",
+    "scope:demo"
+  ],
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "^package-preview"
+      ],
+      "continuous": true,
+      "options": {
+        "command": "vite --config apps/playground/vite.config.ts --host 127.0.0.1 --port 5173"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "^package-preview"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/apps/playground"
+      ],
+      "options": {
+        "command": "vite build --config apps/playground/vite.config.ts"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/tools/pack-library.mts",
+        "!{projectRoot}/public/downloads/*.tgz"
+      ]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "^build"
+      ],
+      "options": {
+        "command": "node --test apps/playground/test/*.test.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "^build"
+      ],
+      "options": {
+        "command": "tsc -p apps/playground/tsconfig.json"
+      }
+    }
+  }
+}

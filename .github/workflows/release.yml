@@ -1,0 +1,78 @@
+name: Release library
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact version or semver increment (patch, minor, major)
+        required: true
+        default: patch
+      first_release:
+        description: First release, with no previous tag
+        type: boolean
+        default: true
+      dry_run:
+        description: Preview without changing versions, tags, or registry packages
+        type: boolean
+        default: true
+permissions:
+  contents: write
+concurrency:
+  group: tetra-library-release
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      NX_DAEMON: 'false'
+      NX_ISOLATE_PLUGINS: 'false'
+      NX_NO_CLOUD: 'true'
+      RELEASE_VERSION: ${{ inputs.version }}
+      FIRST_RELEASE: ${{ inputs.first_release }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run verify:package
+      - name: Check publishing credentials
+        if: ${{ !inputs.dry_run }}
+        shell: bash
+        run: test -n "$NODE_AUTH_TOKEN" || { echo 'NPM_TOKEN is required for publishing.' >&2; exit 1; }
+      - name: Configure release commit identity
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      - name: Version and changelog or preview
+        shell: bash
+        run: |
+          args=("$RELEASE_VERSION" --first-release="$FIRST_RELEASE")
+          if [ "$DRY_RUN" = 'true' ]; then
+            npx nx release "${args[@]}" --dry-run --skip-publish
+          else
+            npx nx release "${args[@]}" --skip-publish
+          fi
+      - name: Verify the versioned package
+        if: ${{ !inputs.dry_run }}
+        run: |
+          npm run build
+          npm test
+          npm run typecheck
+          npm run verify:package
+      - name: Push release commit and tags
+        if: ${{ !inputs.dry_run }}
+        run: git push --follow-tags origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+      - name: Publish the verified version
+        if: ${{ !inputs.dry_run }}
+        run: npx nx release publish --projects tetra-stream --first-release="$FIRST_RELEASE"

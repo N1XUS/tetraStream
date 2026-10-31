@@ -1,0 +1,23 @@
+name: Bug report
+description: Report a parser, typing, documentation, or playground problem.
+labels: []
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include expected behavior and actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include format, input, chunk boundaries, and code or steps. Use fictional data.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Package version, runtime/browser, and operating system.
