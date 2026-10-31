@@ -21,15 +21,18 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "@rivetjs/nx:build",
       "dependsOn": [
         "^package-preview"
       ],
       "outputs": [
-        "{workspaceRoot}/dist/apps/playground"
+        "{workspaceRoot}/dist/apps/playground",
+        "{projectRoot}/.wrangler/deploy"
       ],
       "options": {
-        "command": "vite build --config apps/playground/vite.config.ts"
+        "outputPath": "../../dist/apps/playground",
+        "ssr": true,
+        "prerender": true
       },
       "inputs": [
         "production",
@@ -54,6 +57,28 @@
       ],
       "options": {
         "command": "tsc -p apps/playground/tsconfig.json"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "command": "wrangler deploy --config ../../dist/apps/playground/cloudflare/wrangler.json",
+        "cwd": "apps/playground"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "build"
+      ],
+      "continuous": true,
+      "cache": false,
+      "options": {
+        "command": "wrangler dev --config ../../dist/apps/playground/cloudflare/wrangler.json --ip 127.0.0.1 --port 4173",
+        "cwd": "apps/playground"
       }
     }
   }

@@ -19,3 +19,6 @@ apps/playground/public/downloads/*.tmp
 *.tsbuildinfo
 coverage/
 docs/superpowers/
+
+# Local Cloudflare CLI state.
+.wrangler/

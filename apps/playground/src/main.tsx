@@ -1,5 +1,5 @@
 import { signal, onCleanup } from '@rivetjs/reactivity';
-import { render, For, Show, clientEffect } from '@rivetjs/runtime/dom';
+import { For, Show, clientEffect } from '@rivetjs/runtime/dom';
 import { Button } from '@rivetjs/ui/button';
 import { Card } from '@rivetjs/ui/card';
 import { Chip } from '@rivetjs/ui/chip';
@@ -45,7 +45,7 @@ const formats: ProfileFormat[] = ['json', 'yaml', 'xml', 'html', 'ndjson', 'csv'
 const formatLabels: Partial<Record<ProfileFormat, string>> = { ndjson: 'JSON Lines', yaml: 'YAML / YML' };
 const text = (value: unknown): string => typeof value === 'string' ? value : value === undefined ? '' : JSON.stringify(value);
 
-function App() {
+export default function App() {
   const format = signal<ProfileFormat>('json');
   const source = signal<Record<ProfileFormat, string>>({ ...examples });
   let parser = new StreamNormalizer({ format: 'json' });
@@ -188,7 +188,3 @@ function App() {
 
   </>;
 }
-
-const container = document.getElementById('app');
-if (!container) throw new Error('Missing app mount point');
-render(() => <App />, container);

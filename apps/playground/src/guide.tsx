@@ -1,5 +1,5 @@
 import { signal } from '@rivetjs/reactivity';
-import { render, For } from '@rivetjs/runtime/dom';
+import { For } from '@rivetjs/runtime/dom';
 import { Navbar } from '@rivetjs/ui/navbar';
 import { Link } from '@rivetjs/ui/link';
 import { Chip } from '@rivetjs/ui/chip';
@@ -52,7 +52,7 @@ function Example(props: { title: string; code: string; language?: string }) {
   </CodeBlock.Header><CodeBlock.Code code={() => props.code} language={props.language ?? 'ts'} wrap aria-label={props.title} /></CodeBlock>;
 }
 
-function Guide() {
+export default function Guide() {
   const sort = signal<SortDescriptor | null>(null);
   return <>
     <a class="skip-link" href="#quickstart">Skip to the user card guide</a>
@@ -145,7 +145,3 @@ function Guide() {
     </main>
   </>;
 }
-
-const app = document.getElementById('app');
-if (!app) throw new Error('Missing app mount point');
-render(() => <Guide />, app);

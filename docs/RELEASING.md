@@ -9,7 +9,8 @@ Nx Release selects only `tetra-stream` (`libs/tetra-stream`). It is versioned in
 - Library output: `libs/tetra-stream/dist/`.
 - Installable archive: `artifacts/tetra-stream-VERSION.tgz`.
 - Stable playground download: `apps/playground/public/downloads/tetra-stream.tgz`.
-- Site output: `dist/apps/playground/`, including `guide/index.html`.
+- Prerendered site output: `dist/apps/playground/client/`, including `guide/index.html`.
+- Cloudflare static deployment: `dist/apps/playground/cloudflare/`.
 
 The cacheable `package-preview` target builds and packs the library before playground dev/build. Archives are generated and ignored by Git. `npm run pack` additionally gates packaging on library tests.
 
@@ -72,6 +73,8 @@ npm run typecheck
 npm run verify:package
 npm publish ./artifacts/tetra-stream-0.1.0.tgz --access public --tag latest
 ```
+
+To verify a published version through the same isolated consumer, run `TETRA_PACKAGE_SPEC=tetra-stream@VERSION node tools/verify-package.mts`.
 
 Use `--first-release` only for the initial release. After npm confirms publication, push the matching commit and annotated `tetra-stream@VERSION` tag. Verify the registry version and install it in a clean consumer. Do not repeat a publish after an uncertain outcome until you have checked the registry; npm versions are immutable.
 

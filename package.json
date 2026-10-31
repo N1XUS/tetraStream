@@ -20,7 +20,8 @@
     "verify:package": "nx run tetra-stream:pack && node tools/verify-package.mts",
     "release:dry-run": "nx release version --first-release --dry-run --git-commit=false --git-tag=false --stage-changes=false",
     "release": "nx release",
-    "benchmark": "nx run tetra-stream:benchmark"
+    "benchmark": "nx run tetra-stream:benchmark",
+    "serve": "nx run playground:serve"
   },
   "devDependencies": {
     "@nx/js": "^23.3.1",
@@ -28,6 +29,7 @@
     "@rivetjs/kit": "^0.1.0-alpha.2",
     "@rivetjs/nx": "^0.1.0-alpha.2",
     "@rivetjs/reactivity": "^0.1.0-alpha.2",
+    "@rivetjs/router": "^0.1.0-alpha.2",
     "@rivetjs/runtime": "^0.1.0-alpha.2",
     "@rivetjs/ui": "^0.1.0-alpha.2",
     "@tailwindcss/vite": "^4.3.3",
@@ -36,7 +38,8 @@
     "nx": "^23.3.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
-    "vite": "^8.3.5"
+    "vite": "^8.3.5",
+    "wrangler": "^4.156.0"
   },
   "description": "Streaming structured data for AI interfaces: TypeScript library, live demos, and usage guide.",
   "license": "MIT",

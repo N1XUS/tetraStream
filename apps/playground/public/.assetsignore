@@ -1,0 +1,3 @@
+# Build metadata is used for prerendering, not public assets.
+.vite/
+.DS_Store

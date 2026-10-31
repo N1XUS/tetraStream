@@ -9,7 +9,8 @@ const workspace = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest: unknown = JSON.parse(readFileSync(join(workspace, 'libs/tetra-stream/package.json'), 'utf8'));
 assert.ok(manifest !== null && typeof manifest === 'object' && 'version' in manifest && typeof manifest.version === 'string');
 const archive = join(workspace, 'artifacts', `tetra-stream-${manifest.version}.tgz`);
-assert.ok(existsSync(archive), 'Build the tarball with npm run pack first');
+const packageSpec = process.env.TETRA_PACKAGE_SPEC ?? archive;
+if (packageSpec === archive) assert.ok(existsSync(archive), 'Build the tarball with npm run pack first');
 const consumer = mkdtempSync(join(tmpdir(), 'tetra-consumer-'));
 
 function run(command: string, args: string[]) {
@@ -20,7 +21,7 @@ function run(command: string, args: string[]) {
 
 try {
   writeFileSync(join(consumer, 'package.json'), JSON.stringify({ name: 'tetra-package-check', private: true, type: 'module' }));
-  run('npm', ['install', archive, 'zod@4', '--ignore-scripts', '--omit=dev', '--no-audit', '--no-fund']);
+  run('npm', ['install', packageSpec, 'zod@4', '--ignore-scripts', '--omit=dev', '--no-audit', '--no-fund']);
   const installed = join(consumer, 'node_modules/tetra-stream');
   const packed: unknown = JSON.parse(readFileSync(join(installed, 'package.json'), 'utf8'));
   assert.ok(packed !== null && typeof packed === 'object' && 'dependencies' in packed);

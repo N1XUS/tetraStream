@@ -140,6 +140,7 @@ docs/                 Contribution, release, and component notes
 All authored application/library source, tests, benchmarks, and tools are TypeScript (`.ts`, `.tsx`, or `.mts`) with strict checking. Library source imports ending in `.js` deliberately refer to the emitted ESM paths. Generated `dist` JavaScript is the runtime package output.
 
 ```sh
+npm run serve           # Production static site at http://127.0.0.1:4173
 npm run build           # Library, preview archive, demos, and guide
 npm test                # Parser, bindings, examples, and transport adapters
 npm run typecheck       # Strict source/test/tool types and public API fixtures
@@ -147,7 +148,7 @@ npm run verify:package  # Install the archive in an isolated TypeScript consumer
 npm run benchmark      # Local snapshot/patch comparisons
 ```
 
-Static site output is `dist/apps/playground/`, including `guide/index.html`. Serve the directory as a multi-page static site. Ordinary pushes run verification and do not publish to npm.
+Rivet prerenders the homepage and guide into `dist/apps/playground/client/`. The Cloudflare adapter writes the deployable static site and Wrangler configuration to `dist/apps/playground/cloudflare/`. Ordinary pushes run verification and do not publish to npm.
 
 ## Boundaries
 
@@ -211,3 +212,14 @@ for await (const snapshot of streamStructured(['Hello, ', 'world!'], {
 `create(options)` receives readonly `maxLength` and `maxDepth`. Return a fresh synchronous `LanguageParser<T>` with `write(chunk)` and `end()`. Both return `LanguageUpdate<T>` containing `DeepPartial<T> | undefined` data and a completion map keyed by RFC 6901 JSON Pointer. `end()` must validate the original document and mark finished values complete; throw on invalid syntax. Input length is enforced by the normalizer. Your strategy must enforce nesting depth and its own grammar.
 
 Return JSON-compatible plain data: strings, finite numbers, booleans, null, dense arrays, and objects with enumerable data properties. Omit unavailable fields rather than assigning `undefined`; only the entire `data` result may be `undefined`. Cycles, shared object references, sparse arrays, getters, symbols, and class objects are rejected before commit. Output tree depth is also checked against `maxDepth`. Results are copied before ownership transfers, so parsers may reuse their mutable working trees. Snapshots, selection, schema validation, and patch replay work with custom formats. Patch mode diffs the returned tree; it does not provide the built-ins' direct mutation-journal performance. Use the strategy or its `format` string with `createPatchState({ format: strategy })`.
+
+## Deploy the static site
+
+The playground uses `rivetRouter({ mode: 'static', adapter: 'cloudflare' })` with the official Rivet Nx build executor. It renders both routes to HTML at build time; Cloudflare serves static assets without an application server.
+
+```sh
+npx wrangler login
+npx nx run playground:deploy
+```
+
+The deployment target is `tetrastream.severyn.pro`, declared in `apps/playground/wrangler.jsonc`. Wrangler creates the custom-domain binding and DNS record in the authenticated Cloudflare account. See [deployment details](docs/DEPLOYING.md) for checks and repeat deployments.
