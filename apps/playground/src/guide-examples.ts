@@ -1,3 +1,4 @@
+import { rxjsPipelineCode, rxjsBindingCode } from './rxjs-guide.ts';
 import { strategyExample } from './strategy-guide.ts';
 import { sseAdapterCode, sseUsageCode } from './sse-guide.ts';
 
@@ -32,6 +33,7 @@ export const exampleHtml = `<!doctype html>
 </html>`;
 
 export const guideExamples = {
+  rxjs: rxjsPipelineCode + '\n\n' + rxjsBindingCode,
   strategy: strategyExample,
   sse: sseAdapterCode + '\n\n' + sseUsageCode,
   profile: `import { streamStructured, select } from 'tetra-stream';

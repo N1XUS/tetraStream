@@ -37,6 +37,7 @@ const sections = [
   { id: 'quickstart', title: 'Build a live user card' },
   { id: 'completion', title: 'Partial vs. complete' },
   { id: 'transport', title: 'Connect your text stream' },
+  { id: 'rxjs', title: 'Use RxJS generate' },
   { id: 'csv', title: 'Render CSV as a table' },
   { id: 'css', title: 'Style an element with CSS' },
   { id: 'patches', title: 'Use incremental patches' },
@@ -427,8 +428,57 @@ export default function Guide() {
                 data and its error; create a fresh parser for another document.
               </p>
             </section>
+            <section id="rxjs" aria-labelledby="rxjs-title">
+              <div class="eyebrow">05 · OBSERVABLE STREAMS</div>
+              <h2 id="rxjs-title">Generate chunks with RxJS.</h2>
+              <p>
+                This complete TypeScript example uses RxJS <code>generate</code> to simulate AI text
+                deltas and <code>StreamNormalizer</code> to expose partial data on each emission. It
+                builds its own user card and a stop button, so you can paste it into{' '}
+                <code>src/main.ts</code> in a browser TypeScript app.
+              </p>
+              <Example
+                title="Terminal · RxJS example dependencies"
+                language="bash"
+                code="npm install tetra-stream rxjs"
+              />
+              <Example
+                title="rxjs-profile.ts · generate, parse, and render"
+                code={guideExamples.rxjs}
+              />
+              <p>
+                <code>generate</code> uses an options object to walk the chunk indices. It emits
+                synchronously by default; <code>concatMap</code> with <code>delay</code> spaces the
+                chunks out so the browser can paint each update. The first chunk shows{' '}
+                <strong>Al</strong> with a partial name, then the name completes while the bio keeps
+                growing.
+              </p>
+              <p>
+                <code>defer</code> creates a fresh parser for every subscription.{' '}
+                <code>concatWith</code> calls <code>end()</code> only after the source completes
+                normally. Unsubscribing stops pending chunks and preserves the visible partial
+                values; invalid or truncated JSON goes to the error handler. Avoid finalizing the
+                parser in <code>finalize</code>, because it also runs on cancellation and errors.
+              </p>
+              <p>
+                For a real provider, replace the <code>generate</code> source with your ordered{' '}
+                <code>Observable&lt;string&gt;</code> of decoded text deltas and remove the
+                simulated pacing. Emit completion only when that document has finished. RxJS is
+                optional; TetraStream and these guide pages do not add it to their browser runtime.
+              </p>
+              <Link
+                href="https://rxjs.dev/api/index/function/generate"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                RxJS generate API{' '}
+                <Link.Icon>
+                  <Icon icon={ArrowRight} size={14} />
+                </Link.Icon>
+              </Link>
+            </section>
             <section id="csv" aria-labelledby="csv-guide-title">
-              <div class="eyebrow">05 · STREAM ROWS AND CELLS</div>
+              <div class="eyebrow">06 · STREAM ROWS AND CELLS</div>
               <h2 id="csv-guide-title">Render CSV as a table.</h2>
               <p>
                 CSV and TSV produce arrays of string rows. The library keeps row zero in the data;
@@ -456,7 +506,7 @@ export default function Guide() {
               </Link>
             </section>
             <section id="css" aria-labelledby="css-guide-title">
-              <div class="eyebrow">06 · AI-GENERATED STYLES</div>
+              <div class="eyebrow">07 · AI-GENERATED STYLES</div>
               <h2 id="css-guide-title">Style an element as CSS arrives.</h2>
               <p>
                 Use <code>format: Format.CSS</code> for a structured stylesheet tree. Selectors,
@@ -485,7 +535,7 @@ export default function Guide() {
               </p>
             </section>
             <section id="patches" aria-labelledby="patches-title">
-              <div class="eyebrow">07 · LARGER RESPONSES</div>
+              <div class="eyebrow">08 · LARGER RESPONSES</div>
               <h2 id="patches-title">Replay only the changes.</h2>
               <p>
                 Full snapshots copy the accumulated document. Patch mode emits changed paths and
@@ -505,7 +555,7 @@ export default function Guide() {
               </p>
             </section>
             <section id="validation" aria-labelledby="validation-title">
-              <div class="eyebrow">08 · ACCEPT FINISHED DATA</div>
+              <div class="eyebrow">09 · ACCEPT FINISHED DATA</div>
               <h2 id="validation-title">Validate before taking action.</h2>
               <p>
                 <code>streamValidated</code> preserves progressive input and runs a Standard Schema
@@ -530,7 +580,7 @@ export default function Guide() {
               </p>
             </section>
             <section id="rivet" aria-labelledby="rivet-title">
-              <div class="eyebrow">09 · YOUR UI FRAMEWORK</div>
+              <div class="eyebrow">10 · YOUR UI FRAMEWORK</div>
               <h2 id="rivet-title">Use RivetJS + Rivet UI.</h2>
               <p>
                 The parser is independent of Rivet. In a Rivet app, put arriving values in signals
@@ -552,7 +602,7 @@ export default function Guide() {
               </p>
             </section>
             <section id="strategies" aria-labelledby="strategies-title">
-              <div class="eyebrow">10 · EXTEND THE PARSER</div>
+              <div class="eyebrow">11 · EXTEND THE PARSER</div>
               <h2 id="strategies-title">Add your own language.</h2>
               <p>
                 Choose a built-in with <code>Format.JSON</code>, <code>Format.CSS</code>, or another{' '}
@@ -582,7 +632,7 @@ export default function Guide() {
               </p>
             </section>
             <section id="reference" aria-labelledby="reference-title">
-              <div class="eyebrow">11 · KEEP HANDY</div>
+              <div class="eyebrow">12 · KEEP HANDY</div>
               <h2 id="reference-title">Formats & API reference.</h2>
               <p>
                 Choose the format explicitly. The normalizer gives every adapter the same lifecycle

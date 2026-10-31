@@ -68,7 +68,7 @@ Open the local URL printed by Vite, normally `http://127.0.0.1:5173/`.
 - **CSV table:** growing headers, rows, and cells, with stable collection identities.
 - **CSS styling:** streamed declarations progressively style a separate preview element.
 - **Playback:** play, pause, reset, step, change speed, or scrub to any point in a response.
-- **Usage guide:** open `/guide/` for complete HTML/TypeScript examples, transport adapters, rendering, completion policies, patches, validation, and Rivet integration.
+- **Usage guide:** open `/guide/` for complete HTML/TypeScript examples, transport adapters, an RxJS `generate` recipe, rendering, completion policies, patches, validation, and Rivet integration.
 
 The demos use simulated AI text and the real parser. No API key or backend is required. The sample portrait is AI-generated and depicts a fictional person.
 
