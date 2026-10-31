@@ -20,7 +20,7 @@ import './style.css';
 import './guide.css';
 
 const sections = [
-  { id: 'installation', title: 'Install the preview' },
+  { id: 'installation', title: 'Install TetraStream' },
   { id: 'quickstart', title: 'Build a live user card' },
   { id: 'completion', title: 'Partial vs. complete' },
   { id: 'transport', title: 'Connect your text stream' },
@@ -61,7 +61,7 @@ function Guide() {
       <Navbar.Spacer /><Navbar.Content><Navbar.Item href="/#demo"><Icon icon={ArrowLeft} size={14} /> Live demos</Navbar.Item></Navbar.Content>
     </Navbar.Header></Navbar>
     <main class="guide-page">
-      <header class="guide-intro"><Chip variant="soft" color="accent"><Icon icon={Braces} size={14} /> TypeScript · Developer preview</Chip>
+      <header class="guide-intro"><Chip variant="soft" color="accent"><Icon icon={Braces} size={14} /> TypeScript · 0.1.x</Chip>
         <h1>From a text chunk<br />to a live interface.</h1>
         <p>A practical guide to TetraStream. Start with a working user card, see exactly how values reach the page, then connect your own stream.</p>
         <div class="guide-intro-facts"><span>Complete examples</span><span>No provider required to start</span><span>Framework independent</span></div>
@@ -69,10 +69,10 @@ function Guide() {
       <div class="guide-layout">
         <nav class="guide-toc" aria-label="On this page"><p>ON THIS PAGE</p><For each={sections} by={section => section.id}>{section => <Link href={`#${section().id}`}>{section().title}</Link>}</For><Link href="/#demo">Back to the demos <Link.Icon><Icon icon={ArrowRight} size={14} /></Link.Icon></Link></nav>
         <div class="guide-content">
-          <section id="installation" aria-labelledby="installation-title"><div class="eyebrow">01 · SET UP</div><h2 id="installation-title">Install the preview.</h2>
+          <section id="installation" aria-labelledby="installation-title"><div class="eyebrow">01 · SET UP</div><h2 id="installation-title">Install TetraStream.</h2>
             <p>TetraStream is an ESM library written in strict TypeScript. It includes JavaScript output and TypeScript declarations for modern browsers and Node.js 20+. Your interface can use any framework.</p>
-            <Alert status="accent"><Alert.Indicator /><Alert.Content><Alert.Title>The package is a local developer preview.</Alert.Title><Alert.Description>It has not been published to npm by this project. Download the built package, then install the tarball inside your application.</Alert.Description></Alert.Content></Alert>
-            <div class="guide-actions"><Link href="/downloads/tetra-stream.tgz" download><Icon icon={Download} size={15} /> Download the preview package (.tgz)</Link></div>
+            <Alert status="accent"><Alert.Indicator /><Alert.Content><Alert.Title>An early release, ready to try.</Alert.Title><Alert.Description>Install from npm inside your application. To test the exact build used by these demos, download the archive and run <code>npm install ./tetra-stream.tgz</code>.</Alert.Description></Alert.Content></Alert>
+            <div class="guide-actions"><Link href="/downloads/tetra-stream.tgz" download><Icon icon={Download} size={15} /> Download this demo build (.tgz)</Link></div>
             <Example title="Terminal · inside your application" language="bash" code={installCommand} />
             <p class="guide-note">The examples below are client-side TypeScript. Use your existing browser TypeScript bundler. With Vite, replace the root <code>index.html</code> and <code>src/main.ts</code> with the two files below, then run your development server. The simulated source works without an API key or backend.</p>
           </section>

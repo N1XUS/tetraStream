@@ -6,13 +6,11 @@ Progressively parse streamed **JSON, YAML, XML, HTML, JSON Lines, CSV, TSV, and 
 
 ## Installation
 
-The package is prepared for npm publication but has not been published by this project. Install the locally built tarball:
-
 ```sh
-npm install ./tetra-stream-0.1.0.tgz
+npm install tetra-stream
 ```
 
-Once released, the equivalent registry command is `npm install tetra-stream`. This library requires a modern browser or Node.js 20+. It has no dependency on RivetJS or any UI framework.
+This early `0.1.x` release requires a modern browser or Node.js 20+. It has no dependency on RivetJS or any UI framework. For an unreleased local build, install the generated `tetra-stream-VERSION.tgz` archive instead.
 
 ## Parse growing values
 

@@ -314,4 +314,4 @@ if (!app) throw new Error('Add <div id="app"> to your page');
 render(() => <UserCard />, app);`,
 } satisfies Record<string, string>;
 
-export const installCommand = 'npm install ./tetra-stream.tgz';
+export const installCommand = 'npm install tetra-stream';

@@ -1,7 +1,7 @@
 {
   "name": "tetra-stream",
   "version": "0.1.0",
-  "description": "Progressively parse JSON, YAML, XML, HTML, JSON Lines, CSV and TSV with explicit partial and complete states.",
+  "description": "Progressively parse JSON, YAML, XML, HTML, JSON Lines, CSV, TSV and CSS with explicit partial and complete states and custom language strategies.",
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
@@ -36,7 +36,10 @@
     "html",
     "llm",
     "partial-json",
-    "typescript"
+    "typescript",
+    "css",
+    "custom-parser",
+    "incremental-parser"
   ],
   "publishConfig": {
     "access": "public"

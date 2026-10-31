@@ -11,7 +11,13 @@ TetraStream is a TypeScript library for turning an unfinished text stream into u
 
 It supports **JSON, YAML, XML, HTML, JSON Lines, CSV, TSV, and CSS**, with explicit partial/complete metadata. The parser is independent of your AI provider, transport, and UI framework.
 
-> Developer preview: the package is prepared for publication. This project has not published it to npm. Build and install the local archive below.
+## Install
+
+```sh
+npm install tetra-stream
+```
+
+An early `0.1.x` release with ESM output and TypeScript declarations. The built library supports modern browsers and Node.js 20+. See the [library documentation](libs/tetra-stream/README.md) for the full API.
 
 ## See the difference
 

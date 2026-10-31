@@ -57,6 +57,24 @@ A real run versions and creates the release changes without publishing, verifies
 
 Package names and versions must be available to the publishing account. The repository metadata and `publishConfig.access` are prepared for a public package; they do not publish or reserve the npm name.
 
+## Local publication
+
+When publishing from an authenticated maintainer workstation, use `npm whoami` to check the account and verify the package name/version before continuing. A local login does not require a GitHub `NPM_TOKEN` secret.
+
+Generate version/changelog changes with Nx, verify them, commit/tag the release, and publish the exact tested archive:
+
+```sh
+npx nx release version 0.1.0 --first-release --git-commit=false --git-tag=false --stage-changes=false
+npx nx release changelog 0.1.0 --first-release --git-commit=false --git-tag=false --git-push=false --stage-changes=false
+npm run build
+npm test
+npm run typecheck
+npm run verify:package
+npm publish ./artifacts/tetra-stream-0.1.0.tgz --access public --tag latest
+```
+
+Use `--first-release` only for the initial release. After npm confirms publication, push the matching commit and annotated `tetra-stream@VERSION` tag. Verify the registry version and install it in a clean consumer. Do not repeat a publish after an uncertain outcome until you have checked the registry; npm versions are immutable.
+
 ## Source-only releases
 
 For a source push, verify the prepared tree and push `main` normally. Do not force-push to replace remote history. No npm token, package publication, or GitHub Release is required to share the source repository.
