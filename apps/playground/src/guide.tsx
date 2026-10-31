@@ -129,7 +129,7 @@ export default function Guide() {
       <main class="guide-page">
         <header class="guide-intro">
           <Chip variant="soft" color="accent">
-            <Icon icon={Braces} size={14} /> TypeScript · 0.1.x
+            <Icon icon={Braces} size={14} /> TypeScript · 0.2.x
           </Chip>
           <h1>
             From a text chunk
@@ -137,7 +137,7 @@ export default function Guide() {
             to a live interface.
           </h1>
           <p>
-            A practical guide to TetraStream. Start with a working user card, see exactly how values
+            A practical guide to TetraStream. Start with a nested user card, see exactly how values
             reach the page, then connect your own stream.
           </p>
           <div class="guide-intro-facts">
@@ -237,6 +237,12 @@ export default function Guide() {
                 and save it as <code>public/avatars/alex-morgan.webp</code>, or replace the URL in
                 the example with an image your app serves.
               </p>
+              <p>
+                The profile includes a <code>contact</code> object with a <code>socials</code> array
+                of objects, and a <code>projects</code> array. Each project has a{' '}
+                <code>details</code> object containing a <code>stack</code> array. A stack item can
+                complete while its array and project remain partial.
+              </p>
               <Example title="index.html" language="html" code={exampleHtml} />
               <Example title="src/main.ts · complete user card" code={guideExamples.profile} />
               <DescriptionList>
@@ -275,7 +281,9 @@ export default function Guide() {
               <p>
                 A snapshot contains <code>data</code>, <code>status</code>, and <code>state</code>.
                 Missing fields have not necessarily arrived yet. Each status key is a JSON Pointer:{' '}
-                <code>/name</code> is the name field, and <code>/skills/0</code> is the first skill.
+                <code>/name</code> is the name field, <code>/contact/email</code> is nested text,
+                and <code>/projects/0/details/stack/1</code> is the second stack item in the first
+                project.
               </p>
               <DescriptionList>
                 <DescriptionList.Item>
@@ -314,10 +322,13 @@ export default function Guide() {
               </DescriptionList>
               <Example title="completion.ts · run independently" code={guideExamples.fields} />
               <p>
-                <code>select(snapshot, path)</code> exposes partial values by default. Use{' '}
-                <code>{`{ when: 'complete' }`}</code> for URLs and other values that need a closing
-                boundary. Use <code>{`{ when: 'document' }`}</code> to wait for successful document
-                EOF. A missing field becomes <code>missing</code> once it can no longer arrive.
+                <code>select(snapshot, path)</code> reads the supplied snapshot synchronously and
+                exposes partial values by default. A requirement filters what is returned now; call
+                again with a newer snapshot for updates. Use{' '}
+                <code>{`{ require: 'complete' }`}</code> for URLs and other values that need a
+                closing boundary. Use <code>{`{ require: 'document' }`}</code> to expose a value
+                only from an already completed document. A missing field becomes{' '}
+                <code>missing</code> once it can no longer arrive.
               </p>
               <Alert status="warning">
                 <Alert.Indicator />

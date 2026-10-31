@@ -81,6 +81,8 @@ import {
   isAvatarPending,
   fields,
 } from './profile.ts';
+import { NestedProfileCard } from './NestedProfileCard';
+import { supportsNestedProfile } from './nested-profile.ts';
 import { examples, type ProfileFormat } from './fixtures.ts';
 import { CsvGridDemo } from './CsvGridDemo';
 import { CssStylingDemo } from './CssStylingDemo';
@@ -101,6 +103,8 @@ const fieldLabels: Record<string, string> = {
   bio: 'About',
   skills: 'Skills',
   website: 'Website',
+  contact: 'Contact object',
+  projects: 'Projects array',
 };
 const inspectorRows = fields.map((id) => ({ id, label: fieldLabels[id] }));
 const inspectorColumns = [
@@ -124,7 +128,7 @@ export default function App() {
   const position = signal(0);
   const active = signal(false);
   const speed = signal('1');
-  const chunkSize = signal('4');
+  const chunkSize = signal('12');
   const editorOpen = signal(false);
   const draft = signal('');
   const avatarLoading = signal('idle');
@@ -141,8 +145,14 @@ export default function App() {
   const fieldText = (name: string) =>
     profile()[name].status === 'pending' && done() ? 'Not included' : text(profile()[name].value);
   const failed = () => snapshot().state === 'error';
+  const activeFields = () =>
+    fields.filter(
+      (field) => supportsNestedProfile(format()) || !['contact', 'projects'].includes(field),
+    );
+  const profileInspectorRows = () =>
+    inspectorRows.filter((row) => activeFields().some((field) => field === row.id));
   const completeCount = () =>
-    fields.filter((field) => profile()[field].status === 'complete').length;
+    activeFields().filter((field) => profile()[field].status === 'complete').length;
   const rawText = () => source()[format()].slice(0, position());
   const skills = () => readSkillItems(snapshot());
   const initials = () =>
@@ -284,7 +294,9 @@ export default function App() {
                   spellCheck={false}
                 />
                 <Description>
-                  Use <code>name, avatar, role, location, bio, skills, website</code>. For HTML,
+                  Use <code>name, avatar, role, location, bio, skills, website</code>. JSON, YAML,
+                  and JSON Lines also accept a <code>contact</code> object and <code>projects</code>{' '}
+                  array, with <code>details.stack</code> arrays inside each project. For HTML,
                   identify fields with <code>data-field</code>. For XML, use matching element names.
                   CSV/TSV use a header row and semicolon-separated skills. JSON Lines records update
                   the profile field by field.
@@ -381,7 +393,7 @@ export default function App() {
             <div>
               <div class="eyebrow">A LITTLE DEMO. A BIG DIFFERENCE.</div>
               <h2 id="demo-title">Watch a profile come to life.</h2>
-              <p>Press play. The card fills in as each piece of data arrives.</p>
+              <p>Press play. Text, nested objects, and arrays fill in as each piece arrives.</p>
             </div>
             <span class="demo-label">
               <Status size="sm" color="accent" /> Interactive demo
@@ -413,9 +425,9 @@ export default function App() {
                 </Button>
                 <span class="toolbar-help">
                   {done()
-                    ? completeCount() === fields.length
+                    ? completeCount() === activeFields().length
                       ? 'All profile fields are ready.'
-                      : `${completeCount()} of ${fields.length} fields received.`
+                      : `${completeCount()} of ${activeFields().length} fields received.`
                     : active()
                       ? 'Keep an eye on the card →'
                       : 'One click to see the difference.'}
@@ -561,11 +573,11 @@ export default function App() {
                         id="card-document-state"
                       >
                         {done()
-                          ? completeCount() === fields.length
+                          ? completeCount() === activeFields().length
                             ? 'Profile complete'
-                            : `${completeCount()} of ${fields.length} fields received`
+                            : `${completeCount()} of ${activeFields().length} fields received`
                           : position()
-                            ? `${completeCount()} of ${fields.length} fields ready`
+                            ? `${completeCount()} of ${activeFields().length} fields ready`
                             : 'Waiting for data'}
                       </Chip>
                     </Card.Header>
@@ -689,6 +701,7 @@ export default function App() {
                           )}
                         </For>
                       </div>
+                      <NestedProfileCard snapshot={snapshot} />
                       <Separator class="profile-divider" />
                       <div class="profile-bottom">
                         <span>
@@ -738,11 +751,11 @@ export default function App() {
                 {failed()
                   ? 'The stream stopped. Your data is still here.'
                   : done()
-                    ? completeCount() === fields.length
+                    ? completeCount() === activeFields().length
                       ? 'Done! The card was useful before the response finished.'
-                      : `Response finished. ${completeCount()} of ${fields.length} profile fields were included.`
+                      : `Response finished. ${completeCount()} of ${activeFields().length} profile fields were included.`
                     : active()
-                      ? `${completeCount()} of ${fields.length} fields ready — and the AI is still writing.`
+                      ? `${completeCount()} of ${activeFields().length} fields ready — and the AI is still writing.`
                       : position()
                         ? 'Take your time. Continue whenever you’re ready.'
                         : 'The card starts updating before the full response is ready.'}
@@ -848,7 +861,7 @@ export default function App() {
                         <Tabs.Tab id="fields">
                           Field status{' '}
                           <span id="field-count">
-                            {completeCount()}/{fields.length}
+                            {completeCount()}/{activeFields().length}
                           </span>
                         </Tabs.Tab>
                         <Tabs.Tab id="data">Parsed data</Tabs.Tab>
@@ -871,7 +884,7 @@ export default function App() {
                                   </TableColumn>
                                 )}
                               </TableHeader>
-                              <TableBody items={inspectorRows}>
+                              <TableBody items={profileInspectorRows}>
                                 {(row: (typeof inspectorRows)[number]) => (
                                   <TableRow
                                     id={row.id}

@@ -1,3 +1,4 @@
+import { profileHtml, profileCode } from './profile-guide.ts';
 import { rxjsPipelineCode, rxjsBindingCode } from './rxjs-guide.ts';
 import { strategyExample } from './strategy-guide.ts';
 import { sseAdapterCode, sseUsageCode } from './sse-guide.ts';
@@ -17,74 +18,13 @@ const profileSource = `async function* textChunks() {
   }
 }`;
 
-export const exampleHtml = `<!doctype html>
-<html lang="en">
-  <head><meta charset="UTF-8"><title>Live user card</title></head>
-  <body>
-    <article aria-label="User profile">
-      <span id="avatar-placeholder">Waiting for avatar…</span>
-      <img id="avatar" alt="Profile portrait" width="48" height="48" hidden>
-      <h1 id="user-name">Waiting for a name…</h1>
-      <p id="user-bio">Waiting for a bio…</p>
-      <p id="profile-state" role="status">Ready</p>
-    </article>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
-</html>`;
+export const exampleHtml = profileHtml;
 
 export const guideExamples = {
   rxjs: rxjsPipelineCode + '\n\n' + rxjsBindingCode,
   strategy: strategyExample,
   sse: sseAdapterCode + '\n\n' + sseUsageCode,
-  profile: `import { streamStructured, select } from 'tetra-stream';
-
-type Profile = { name: string; bio: string; avatar: string };
-
-// These elements come from index.html above.
-function element<T extends HTMLElement>(id: string): T {
-  const node = document.getElementById(id);
-  if (!node) throw new Error('Missing element: ' + id);
-  return node as T;
-}
-const name = element('user-name');
-const bio = element('user-bio');
-const status = element('profile-state');
-const image = element<HTMLImageElement>('avatar');
-const placeholder = element('avatar-placeholder');
-
-image.onload = () => { image.hidden = false; placeholder.hidden = true; };
-image.onerror = () => {
-  image.hidden = true;
-  placeholder.hidden = false;
-  placeholder.textContent = 'Image unavailable';
-};
-
-// A simulated provider: every yield is a decoded text chunk.
-${profileSource}
-
-try {
-  for await (const snapshot of streamStructured<Profile>(textChunks(), {
-    format: 'json',
-  })) {
-    name.textContent = snapshot.data?.name ?? 'Waiting for a name…';
-    bio.textContent = snapshot.data?.bio ?? 'Waiting for a bio…';
-    status.textContent = snapshot.state + ' · Name: '
-      + (snapshot.status['/name'] ?? 'pending') + ' · Bio: '
-      + (snapshot.status['/bio'] ?? 'pending');
-
-    const avatar = select(snapshot, '/avatar', { when: 'complete' });
-    if (avatar.status === 'complete' && typeof avatar.value === 'string'
-        && avatar.value.trim()) {
-      const url = new URL(avatar.value, window.location.href);
-      if (['https:', 'http:'].includes(url.protocol) && image.src !== url.href) {
-        image.src = url.href;
-      }
-    }
-  }
-} catch (error) {
-  // The last displayed values remain on the card.
-  status.textContent = error instanceof Error ? error.message : 'Stream failed';
-}`,
+  profile: profileCode,
   fields: `import { StreamNormalizer, select } from 'tetra-stream';
 
 type Profile = { name: string; avatar: string };
@@ -95,11 +35,11 @@ const name = select(snapshot, '/name');
 if (name.status === 'partial' || name.status === 'complete') {
   console.log(name.value); // "Alex"; inferred string
 }
-const avatar = select(snapshot, '/avatar', { when: 'complete' });
+const avatar = select(snapshot, '/avatar', { require: 'complete' });
 console.log(avatar.status); // "pending": do not assign an image src yet
 
 const next = parser.write('x-morgan.webp"}');
-const ready = select(next, '/avatar', { when: 'complete' });
+const ready = select(next, '/avatar', { require: 'complete' });
 if (ready.status === 'complete') console.log(ready.value);
 // "/avatars/alex-morgan.webp"; field complete, document still streaming
 console.log(parser.end().state); // "complete" after successful EOF`,

@@ -130,7 +130,7 @@ try {
     assert.equal(css.end().status['/nodes/0/nodes/0/value'], 'complete');
     const patches = createPatchState<{ name: string }>();
     for await (const batch of streamPatches(['{"name":"Al', 'ice"}'])) applyPatchBatch(patches, batch);
-    const selected = select(patches, '/name', { when: 'complete' });
+    const selected = select(patches, '/name', { require: 'complete' });
     assert.ok(selected.status === 'complete');
     assert.equal(selected.value, 'Alice');
     const schema = z.object({ name: z.string().min(1), age: z.string().transform(Number) });
@@ -167,7 +167,7 @@ try {
     }
     const state = createPatchState<User>();
     for await (const patch of streamPatches(['{"name":"Alice"}'])) applyPatchBatch(state, patch);
-    const selected = select(state, '/name', { when: 'complete' });
+    const selected = select(state, '/name', { require: 'complete' });
     if (selected.status === 'complete') { const typedName: string = selected.value; void typedName; }
     // @ts-expect-error Unknown typed field path is rejected.
     select(state, '/noSuchField');

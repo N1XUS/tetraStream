@@ -18,14 +18,14 @@ import type {
 
 const parser = new StreamNormalizer<CssDocument>({ format: 'css' });
 const snapshot = parser.write('.ai-card { color: re');
-const value = select(snapshot, '/nodes/0/nodes/0/value', { when: 'complete' });
+const value = select(snapshot, '/nodes/0/nodes/0/value', { require: 'complete' });
 if (value.status === 'complete') {
   const text: string = value.value;
   // @ts-expect-error CSS values retain their declared string type.
   const wrong: number = value.value;
   void [text, wrong];
 }
-const declaration = select(snapshot, '/nodes/0/nodes/0', { when: 'document' });
+const declaration = select(snapshot, '/nodes/0/nodes/0', { require: 'document' });
 if (declaration.status === 'complete' && declaration.value.kind === 'declaration') {
   const partial: string | undefined = declaration.value.value;
   // @ts-expect-error Syntax completion does not validate required model fields.

@@ -1,9 +1,10 @@
 import type { Completion, DeepPartial, Snapshot } from './types.js';
 import type { PathValue, Pointer } from './paths.js';
 
-export type SelectionWhen = 'partial' | 'complete' | 'document';
+export type SelectionRequirement = 'partial' | 'complete' | 'document';
 export interface SelectionOptions {
-  when?: SelectionWhen;
+  /** Minimum completion required to expose a value in the supplied snapshot. */
+  require?: SelectionRequirement;
 }
 type SelectionState = Snapshot<unknown>['state'];
 
@@ -15,17 +16,22 @@ export type SelectionResult<Value> =
   | { status: 'complete'; state: SelectionState; value: DeepPartial<Value> };
 
 /**
- * Read one field using a reusable completion policy (default: partial).
+ * Read one field synchronously from this snapshot. `require` filters exposed values.
+ * The returned selection is a fixed result; call again with a newer snapshot for updates.
  * A terminal error retains completed fields but never satisfies document policy.
  * Missing means the field cannot arrive: its container or the stream has ended.
  */
 export function select<T, const P extends Pointer<T>>(
   snapshot: Snapshot<T>,
   path: P,
-  { when = 'partial' }: SelectionOptions = {},
+  options: SelectionOptions = {},
 ): SelectionResult<PathValue<T, P>> {
-  if (when !== 'partial' && when !== 'complete' && when !== 'document')
-    throw new TypeError(`Unsupported selection policy: ${when}`);
+  for (const key of Object.keys(options)) {
+    if (key !== 'require') throw new TypeError(`Unsupported selection option: ${key}`);
+  }
+  const { require: requirement = 'partial' } = options;
+  if (requirement !== 'partial' && requirement !== 'complete' && requirement !== 'document')
+    throw new TypeError(`Unsupported selection policy: ${requirement}`);
   if (
     typeof path !== 'string' ||
     (path !== '' && !path.startsWith('/')) ||
@@ -55,8 +61,8 @@ export function select<T, const P extends Pointer<T>>(
   if (!exists) return { status: state !== 'streaming' || complete ? 'missing' : 'pending', state };
   const completion: Completion = complete || state === 'complete' ? 'complete' : 'partial';
   if (
-    (when === 'document' && state !== 'complete') ||
-    (when === 'complete' && completion !== 'complete')
+    (requirement === 'document' && state !== 'complete') ||
+    (requirement === 'complete' && completion !== 'complete')
   ) {
     return { status: 'pending', state, completion };
   }

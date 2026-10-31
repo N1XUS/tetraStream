@@ -14,25 +14,25 @@ test('select withholds a partial string until its requested completion boundary'
     state: 'streaming',
     value: 'Al',
   });
-  assert.deepEqual(select(snapshot, '/name', { when: 'complete' }), {
+  assert.deepEqual(select(snapshot, '/name', { require: 'complete' }), {
     status: 'pending',
     state: 'streaming',
     completion: 'partial',
   });
   snapshot = parser.write('ice"');
-  assert.deepEqual(select(snapshot, '/name', { when: 'complete' }), {
+  assert.deepEqual(select(snapshot, '/name', { require: 'complete' }), {
     status: 'complete',
     state: 'streaming',
     value: 'Alice',
   });
-  assert.deepEqual(select(snapshot, '/name', { when: 'document' }), {
+  assert.deepEqual(select(snapshot, '/name', { require: 'document' }), {
     status: 'pending',
     state: 'streaming',
     completion: 'complete',
   });
   parser.write('}');
   snapshot = parser.end();
-  assert.deepEqual(select(snapshot, '/name', { when: 'document' }), {
+  assert.deepEqual(select(snapshot, '/name', { require: 'document' }), {
     status: 'complete',
     state: 'complete',
     value: 'Alice',
@@ -55,7 +55,7 @@ test('select retains complete fields after parse errors but withholds document p
   parser.write('{"ready":false,"unfinished":"a');
   assert.throws(() => parser.end(), SyntaxError);
   const snapshot = parser.snapshot();
-  assert.deepEqual(select(snapshot, '/ready', { when: 'complete' }), {
+  assert.deepEqual(select(snapshot, '/ready', { require: 'complete' }), {
     status: 'complete',
     state: 'error',
     value: false,
@@ -65,12 +65,12 @@ test('select retains complete fields after parse errors but withholds document p
     state: 'error',
     value: 'a',
   });
-  assert.deepEqual(select(snapshot, '/unfinished', { when: 'complete' }), {
+  assert.deepEqual(select(snapshot, '/unfinished', { require: 'complete' }), {
     status: 'pending',
     state: 'error',
     completion: 'partial',
   });
-  assert.deepEqual(select(snapshot, '/ready', { when: 'document' }), {
+  assert.deepEqual(select(snapshot, '/ready', { require: 'document' }), {
     status: 'pending',
     state: 'error',
     completion: 'complete',
@@ -127,13 +127,13 @@ test('select rejects malformed pointers and never follows inherited properties',
 test('select infers descendant completion from completed containers in markup', () => {
   const parser = new StreamNormalizer({ format: 'xml' });
   let snapshot = parser.write('<user id="1"><name>Ada</name></user>');
-  assert.deepEqual(select(snapshot, '/children/0/name', { when: 'complete' }), {
+  assert.deepEqual(select(snapshot, '/children/0/name', { require: 'complete' }), {
     status: 'complete',
     state: 'streaming',
     value: 'user',
   });
   snapshot = parser.end();
-  assert.deepEqual(select(snapshot, '/children', { when: 'document' }), {
+  assert.deepEqual(select(snapshot, '/children', { require: 'document' }), {
     status: 'complete',
     state: 'complete',
     value: at(snapshot.data, 'children'),
@@ -158,4 +158,32 @@ test('select rejects malformed escape sequences even when the target field is ab
   for (const path of ['/absent/~2', '/absent/~', '/absent/~00~3']) {
     assert.throws(() => select(snapshot, path as Pointer<JSONValue | MarkupDocument>), TypeError);
   }
+});
+
+test('require filters the current snapshot synchronously without waiting for future writes', () => {
+  const parser = new StreamNormalizer<{ bio: string }>();
+  const first = parser.write('{"bio":"Making com');
+  const hidden = select(first, '/bio', { require: 'complete' });
+  assert.equal(hidden.status, 'pending');
+  assert.equal('value' in hidden, false);
+  const visible = select(first, '/bio', { require: 'partial' });
+  assert.equal(visible.status, 'partial');
+  if ('value' in visible) assert.equal(visible.value, 'Making com');
+  parser.write('plex things simple."}');
+  assert.equal(
+    hidden.status,
+    'pending',
+    'a selection is an immediate result, not a live subscription',
+  );
+  assert.equal(select(parser.snapshot(), '/bio', { require: 'complete' }).status, 'complete');
+  assert.equal(select(parser.snapshot(), '/bio', { require: 'document' }).status, 'pending');
+  assert.equal(select(parser.end(), '/bio', { require: 'document' }).status, 'complete');
+});
+
+test('unknown selection options are rejected instead of silently bypassing requirements', () => {
+  const snapshot = new StreamNormalizer().write('{"name":"Al');
+  assert.throws(
+    () => select(snapshot, '/name', { when: 'complete' } as never),
+    /Unsupported selection option/,
+  );
 });

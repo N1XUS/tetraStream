@@ -65,13 +65,13 @@ When publishing from an authenticated maintainer workstation, use `npm whoami` t
 Generate version/changelog changes with Nx, verify them, commit/tag the release, and publish the exact tested archive:
 
 ```sh
-npx nx release version 0.1.0 --first-release --git-commit=false --git-tag=false --stage-changes=false
-npx nx release changelog 0.1.0 --first-release --git-commit=false --git-tag=false --git-push=false --stage-changes=false
+npx nx release version 0.2.0 --git-commit=false --git-tag=false --stage-changes=false
+npx nx release changelog 0.2.0 --git-commit=false --git-tag=false --git-push=false --stage-changes=false
 npm run build
 npm test
 npm run typecheck
 npm run verify:package
-npm publish ./artifacts/tetra-stream-0.1.0.tgz --access public --tag latest
+npm publish ./artifacts/tetra-stream-0.2.0.tgz --access public --tag latest
 ```
 
 To verify a published version through the same isolated consumer, run `TETRA_PACKAGE_SPEC=tetra-stream@VERSION node tools/verify-package.mts`.

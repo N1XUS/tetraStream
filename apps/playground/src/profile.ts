@@ -1,6 +1,16 @@
 import { select, type Completion, type Snapshot } from 'tetra-stream';
 
-export const fields = ['name', 'avatar', 'role', 'location', 'bio', 'skills', 'website'] as const;
+export const fields = [
+  'name',
+  'avatar',
+  'role',
+  'location',
+  'bio',
+  'skills',
+  'website',
+  'contact',
+  'projects',
+] as const;
 export type ProfileField = (typeof fields)[number];
 export interface ProfileFieldValue {
   value: unknown;
@@ -138,7 +148,7 @@ export function readAvatarSource(snapshot: Snapshot<unknown>): string | undefine
           : { '/avatar': avatar.status },
     },
     '/avatar',
-    { when: 'complete' },
+    { require: 'complete' },
   );
   return selected.status === 'complete' &&
     typeof selected.value === 'string' &&

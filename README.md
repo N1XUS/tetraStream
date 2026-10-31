@@ -19,7 +19,7 @@ It supports **JSON, YAML, XML, HTML, JSON Lines, CSV, TSV, and CSS**, with expli
 npm install tetra-stream
 ```
 
-An early `0.1.x` release with ESM output and TypeScript declarations. The built library supports modern browsers and Node.js 20+. See the [library documentation](libs/tetra-stream/README.md) for the full API.
+An early `0.2.x` release with ESM output and TypeScript declarations. The built library supports modern browsers and Node.js 20+. See the [library documentation](libs/tetra-stream/README.md) for the full API.
 
 ## See the difference
 
@@ -38,14 +38,16 @@ console.log(first.data?.bio); // Making com
 console.log(first.status['/name']); // complete
 console.log(first.status['/bio']); // partial
 
-const bio = select(first, '/bio', { when: 'complete' });
-console.log(bio.status); // pending: withheld until complete
+const bio = select(first, '/bio', { require: 'complete' });
+console.log(bio.status); // pending: no value exposed in this snapshot
 
 parser.write('plex things simple."}');
 const final = parser.end();
 console.log(final.state); // complete
 console.log(final.data?.bio); // Making complex things simple.
 ```
+
+`select()` reads the supplied snapshot synchronously. `require` checks its current completion; returned selections are fixed results. Call it again with the next snapshot to update the UI.
 
 A syntactically complete field can be used while the rest of the response is still arriving. Completion does **not** prove that required fields exist or that your application schema is valid. Runtime schema validation is available separately.
 
@@ -64,7 +66,7 @@ npm run dev
 
 Open the local URL printed by Vite, normally `http://127.0.0.1:5173/`.
 
-- **User card:** partial text, completion badges, and an avatar that waits for its full URL.
+- **User card:** nested contact objects, project arrays with nested stack arrays, completion badges, and an avatar that requires its full URL.
 - **CSV table:** growing headers, rows, and cells, with stable collection identities.
 - **CSS styling:** streamed declarations progressively style a separate preview element.
 - **Playback:** play, pause, reset, step, change speed, or scrub to any point in a response.
@@ -92,7 +94,7 @@ npm run pack
 Then, inside your application, install the generated archive:
 
 ```sh
-npm install /absolute/path/to/tetraStream/artifacts/tetra-stream-0.1.0.tgz
+npm install /absolute/path/to/tetraStream/artifacts/tetra-stream-0.2.0.tgz
 ```
 
 The archive contains ESM JavaScript, TypeScript declarations, package metadata, README, and license. It excludes workspace source, tests, demos, and build tools. See [the package README](libs/tetra-stream/README.md) for the full API and format contracts.

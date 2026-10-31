@@ -27,21 +27,21 @@ if (count.status === 'complete') {
   const n: number = count.value;
   void n;
 }
-const person = select(snapshot, '/people/0', { when: 'complete' });
+const person = select(snapshot, '/people/0', { require: 'complete' });
 if (person.status === 'complete') {
   const maybeName: string | undefined = person.value.name;
   // @ts-expect-error Syntactic completion never validates required object fields.
   const name: string = person.value.name;
   void [maybeName, name];
 }
-const people = select(snapshot, '/people', { when: 'document' });
+const people = select(snapshot, '/people', { require: 'document' });
 if (people.status === 'complete') {
   const maybeAge: number | undefined = people.value[0]?.age;
   // @ts-expect-error Document completion never validates required array item fields.
   const requiredAge: number = people.value[0].age;
   void [maybeAge, requiredAge];
 }
-const address = select(snapshot, '/address', { when: 'complete' });
+const address = select(snapshot, '/address', { require: 'complete' });
 if (address.status === 'complete') {
   // @ts-expect-error Required object properties remain partial even when closed.
   const requiredCity: string = address.value.city;
@@ -75,7 +75,7 @@ select(snapshot, '/people/map');
 // @ts-expect-error JSON Pointer escapes must be reflected in typed keys.
 select(snapshot, '/a/b/~key');
 // @ts-expect-error Completion policies are a fixed set.
-select(snapshot, '/name', { when: 'closed' });
+select(snapshot, '/name', { require: 'closed' });
 
 type Assert<T extends true> = T;
 type Equal<A, B> =
@@ -92,3 +92,6 @@ const bounded: Pointer<Recursive> = '/child/child/child/child/child/child/child/
 // @ts-expect-error Typed pointers have an eight-segment recursion bound.
 const tooDeep: Pointer<Recursive> = '/child/child/child/child/child/child/child/child/value';
 void [bounded, tooDeep];
+
+// @ts-expect-error Selection options use require; there is no when alias.
+select(snapshot, '/name', { when: 'complete' });

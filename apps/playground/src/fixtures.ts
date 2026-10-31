@@ -11,7 +11,27 @@ const baseExamples = {
   "location": "Portland, Oregon",
   "bio": "Making complex things feel simple. Currently exploring the space between thoughtful design and useful technology.",
   "skills": ["Interface design", "Creative coding", "Prototyping"],
-  "website": "alexmorgan.design"
+  "website": "alexmorgan.design",
+  "contact": {
+    "email": "alex@example.com",
+    "socials": [{ "network": "GitHub", "handle": "@alexmorgan" }]
+  },
+  "projects": [
+    {
+      "name": "Live data grid",
+      "details": {
+        "summary": "Tables that render one cell at a time.",
+        "stack": ["TypeScript", "RivetJS"]
+      }
+    },
+    {
+      "name": "Adaptive profile",
+      "details": {
+        "summary": "A card that keeps up with its stream.",
+        "stack": ["CSS", "Accessibility"]
+      }
+    }
+  ]
 }`,
   xml: `<user>
   <name>Alex Morgan</name>
@@ -41,7 +61,7 @@ const baseExamples = {
 </article>`,
 };
 
-const profile: Record<string, string | string[]> = JSON.parse(baseExamples.json);
+const profile: Record<string, unknown> = JSON.parse(baseExamples.json);
 const yaml = `name: "Alex Morgan"
 avatar: "/avatars/alex-morgan.webp"
 role: "Product designer & creative developer"
@@ -53,15 +73,34 @@ skills:
   - Creative coding
   - Prototyping
 website: alexmorgan.design
+contact:
+  email: alex@example.com
+  socials:
+    - network: GitHub
+      handle: "@alexmorgan"
+projects:
+  - name: Live data grid
+    details:
+      summary: Tables that render one cell at a time.
+      stack:
+        - TypeScript
+        - RivetJS
+  - name: Adaptive profile
+    details:
+      summary: A card that keeps up with its stream.
+      stack:
+        - CSS
+        - Accessibility
 `;
 const ndjson =
   Object.entries(profile)
     .map(([field, value]) => JSON.stringify({ [field]: value }))
     .join('\n') + '\n';
-const headers = Object.keys(profile);
-const cells = Object.values(profile).map((value) =>
-  Array.isArray(value) ? value.join('; ') : value,
-);
+// Tabular examples keep explicit flat columns; structured examples retain nesting.
+const headers = ['name', 'avatar', 'role', 'location', 'bio', 'skills', 'website'];
+const cells = headers
+  .map((field) => profile[field])
+  .map((value) => (Array.isArray(value) ? value.join('; ') : String(value)));
 const quoteCell = (value: string | string[]) => '"' + String(value).replaceAll('"', '""') + '"';
 const csv = headers.join(',') + '\r\n' + cells.map(quoteCell).join(',') + '\r\n';
 const tsv = headers.join('\t') + '\n' + cells.map(quoteCell).join('\t') + '\n';

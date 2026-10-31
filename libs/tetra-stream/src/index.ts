@@ -26,7 +26,7 @@ export { createPatchState, applyPatchBatch } from './patches.js';
 export type { StreamPatch, PatchBatch, PatchState } from './patches.js';
 export { select } from './selection.js';
 export type { Pointer, PathValue } from './paths.js';
-export type { SelectionWhen, SelectionOptions, SelectionResult } from './selection.js';
+export type { SelectionRequirement, SelectionOptions, SelectionResult } from './selection.js';
 export { validateSnapshot, streamValidated } from './validation.js';
 export type {
   StandardSchemaV1,

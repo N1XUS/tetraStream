@@ -19,6 +19,7 @@ The playground imports the installed `@rivetjs/ui` components directly. Keep the
 | Inspector and integration views                    | `Tabs`                                                                            |
 | Profile source dialog                              | `Modal`                                                                           |
 | Source editors and associated help                 | `TextField`, `Label`, `TextArea`, `Description`                                   |
+| Nested contact and project values                  | `DescriptionList`, nested `Card`, `Chip`, `Skeleton`                              |
 | CSS declaration inspector                          | `Card`, `DescriptionList`, `Chip`                                                 |
 | Stream errors                                      | `Alert` compound parts                                                            |
 | Secondary demo links                               | `Link`, `Link.Icon`                                                               |

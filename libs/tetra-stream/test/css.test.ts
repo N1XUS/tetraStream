@@ -20,7 +20,10 @@ test('CSS exposes growing declaration values and only commits actual boundaries'
   assert.equal(snapshot.status['/nodes/0/selector'], 'complete');
   assert.equal(snapshot.status['/nodes/0/nodes/0/property'], 'complete');
   assert.equal(snapshot.status['/nodes/0/nodes/0/value'], 'partial');
-  assert.equal(select(snapshot, '/nodes/0/nodes/0/value', { when: 'complete' }).status, 'pending');
+  assert.equal(
+    select(snapshot, '/nodes/0/nodes/0/value', { require: 'complete' }).status,
+    'pending',
+  );
   snapshot = parser.write('d; background: linear-gradient(90deg, re');
   assert.equal(snapshot.status['/nodes/0/nodes/0'], 'complete');
   assert.equal(snapshot.status['/nodes/0/nodes/0/value'], 'complete');
@@ -163,7 +166,7 @@ test('CSS recovery cannot commit declarations separated by an invented semicolon
   assert.equal(snapshot.status['/nodes/0/nodes/2/value'], 'partial');
   assert.throws(() => parser.end(), SyntaxError);
   assert.equal(
-    select(parser.snapshot(), '/nodes/0/nodes/0/value', { when: 'complete' }).status,
+    select(parser.snapshot(), '/nodes/0/nodes/0/value', { require: 'complete' }).status,
     'complete',
   );
 });
@@ -223,7 +226,7 @@ test('CSS custom-property token blocks stay one declaration before and after EOF
   assert.deepEqual(at(snapshot.data, 'nodes', 0, 'nodes'), [
     { kind: 'declaration', property: '--x', value: '{a:b;}', important: false },
   ]);
-  assert.deepEqual(select(snapshot, '/nodes/0/nodes/0/value', { when: 'complete' }), {
+  assert.deepEqual(select(snapshot, '/nodes/0/nodes/0/value', { require: 'complete' }), {
     status: 'complete',
     state: 'streaming',
     value: '{a:b;}',
@@ -257,7 +260,7 @@ test('CSS custom token blocks replay without fabricated declarations at every ch
     applyPatchBatch(replay, parser.writePatch(char));
     const { sequence, ...snapshot } = replay;
     assert.deepEqual(snapshot, parser.snapshot());
-    const value = select(snapshot, '/nodes/0/nodes/0/value', { when: 'complete' });
+    const value = select(snapshot, '/nodes/0/nodes/0/value', { require: 'complete' });
     if (value.status === 'complete') assert.equal(value.value, '{a:{b:c;d:e}}');
   }
   applyPatchBatch(replay, parser.endPatch());

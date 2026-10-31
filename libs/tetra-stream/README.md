@@ -10,7 +10,7 @@ Progressively parse streamed **JSON, YAML, XML, HTML, JSON Lines, CSV, TSV, and 
 npm install tetra-stream
 ```
 
-This early `0.1.x` release requires a modern browser or Node.js 20+. It has no dependency on RivetJS or any UI framework. For an unreleased local build, install the generated `tetra-stream-VERSION.tgz` archive instead.
+This early `0.2.x` release requires a modern browser or Node.js 20+. It has no dependency on RivetJS or any UI framework. For an unreleased local build, install the generated `tetra-stream-VERSION.tgz` archive instead.
 
 ## Parse growing values
 
@@ -78,17 +78,17 @@ const name = select(snapshot, '/name');
 if (name.status === 'partial' || name.status === 'complete') {
   console.log(name.value); // "Alex"; inferred string
 }
-const avatar = select(snapshot, '/avatar', { when: 'complete' });
+const avatar = select(snapshot, '/avatar', { require: 'complete' });
 console.log(avatar.status); // "pending": do not assign an image src yet
 
 const next = parser.write('x-morgan.png"}');
-const ready = select(next, '/avatar', { when: 'complete' });
+const ready = select(next, '/avatar', { require: 'complete' });
 if (ready.status === 'complete') console.log(ready.value);
 // "/avatars/alex-morgan.png"; field complete, document still streaming
 console.log(parser.end().state); // "complete" after successful EOF
 ```
 
-`when` is `partial`, `complete`, or `document`. Results discriminate on `status`: `pending`/`missing` have no value; `partial`/`complete` expose the selected value. `state` retains the parser lifecycle. `pending.completion`, when present, describes the withheld value's syntax. An absent field becomes `missing` when its container or stream finishes. A partial value can remain pending after a parse error; inspect `state` to show an interrupted state. Completed fields can remain visible after an unrelated parse error, but document policy only exposes successfully ended documents.
+`select()` returns immediately from the supplied snapshot. `require` is `partial`, `complete`, or `document` and filters which values are exposed now. A returned selection stays unchanged; call `select` again with a newer snapshot for updated data. Results discriminate on `status`: `pending`/`missing` have no value; `partial`/`complete` expose the selected value. `state` retains the parser lifecycle. `pending.completion`, when present, describes the withheld value's syntax. An absent field becomes `missing` when its container or stream finishes. A partial value can remain pending after a parse error; inspect `state` to show an interrupted state. Completed fields can remain visible after an unrelated parse error, but document policy only exposes successfully ended documents.
 
 `Pointer<User>` autocompletes nested paths and rejects unknown literal keys; `PathValue<User, '/name'>` infers `string`. Object keys use RFC 6901 escaping; arrays use numeric segments. Typed paths have an eight-segment recursion bound to support recursive models without exhausting the compiler. Runtime array indices must be canonical non-negative integers. `false`, `0`, `null`, and empty strings are real values. Selecting a completed object or array still returns `DeepPartial`: syntax cannot prove required fields exist or types are correct.
 
@@ -229,10 +229,10 @@ const growing = css.write('.ai-card { color: re');
 // data.nodes[0]: { kind: 'rule', selector: '.ai-card', nodes: [
 //   { kind: 'declaration', property: 'color', value: 're', important: false }
 // ] }
-const waiting = select(growing, '/nodes/0/nodes/0/value', { when: 'complete' });
+const waiting = select(growing, '/nodes/0/nodes/0/value', { require: 'complete' });
 // waiting.status === 'pending'
 const ready = css.write('d; padding: 32px; }');
-const color = select(ready, '/nodes/0/nodes/0/value', { when: 'complete' });
+const color = select(ready, '/nodes/0/nodes/0/value', { require: 'complete' });
 // color: { status: 'complete', state: 'streaming', value: 'red' }
 css.end();
 ```
