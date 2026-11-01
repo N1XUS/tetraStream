@@ -23,7 +23,7 @@ export type {
   NormalizerOptions,
 } from './types.js';
 export { createPatchState, applyPatchBatch } from './patches.js';
-export type { StreamPatch, PatchBatch, PatchState } from './patches.js';
+export type { StreamPatch, PatchBatch, PatchState, PathIssue } from './patches.js';
 export { select } from './selection.js';
 export type { Pointer, PathValue } from './paths.js';
 export type { SelectionRequirement, SelectionOptions, SelectionResult } from './selection.js';

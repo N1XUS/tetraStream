@@ -1,0 +1,1 @@
+{"format":"json","sequence":1,"patches":[{"op":"set","path":"/bad~2escape","value":1}],"state":"streaming"}

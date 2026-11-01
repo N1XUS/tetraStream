@@ -56,6 +56,14 @@ try {
     'saxes',
     'yaml',
   ]);
+  assert.ok(
+    existsSync(join(installed, 'spec/patch-batch.schema.json')),
+    'Published schema must be shipped',
+  );
+  assert.ok(
+    existsSync(join(installed, 'spec/fixtures/index.json')),
+    'Conformance fixtures must be shipped',
+  );
   for (const excluded of ['src', 'test', 'apps', 'node_modules/@rivetjs']) {
     assert.equal(
       existsSync(join(installed, excluded)),
@@ -70,6 +78,18 @@ try {
     import { Format, StreamNormalizer, streamStructured, streamPatches, createPatchState, applyPatchBatch, select, validateSnapshot, streamValidated } from 'tetra-stream';
     import type { CssDocument, LanguageStrategy } from 'tetra-stream';
     import { z } from 'zod';
+    import { fromSSE, fromNDJSON, createPatchState as wireState, applyPatchBatch as applyWire, select as wireSelect } from 'tetra-stream/client';
+    import { toEventStream, eventStreamResponse, ndjsonResponse } from 'tetra-stream/server';
+    assert.ok(import.meta.resolve('tetra-stream/protocol.schema.json').endsWith('/spec/patch-batch.schema.json'));
+    const wire = wireState<{ name: string }>();
+    for await (const batch of fromSSE(eventStreamResponse(toEventStream(['{"name":"Al', 'ice"}'])))) applyWire(wire, batch);
+    assert.deepEqual(wire.data, { name: 'Alice' });
+    assert.equal(wireSelect(wire, '/name', { require: 'complete' }).status, 'complete');
+    const nd = wireState();
+    for await (const batch of fromNDJSON(ndjsonResponse(toEventStream(['true'])))) applyWire(nd, batch);
+    assert.equal(nd.data, true);
+    assert.equal(nd.state, 'complete');
+
     function at(value: unknown, ...path: PropertyKey[]): unknown {
       for (const key of path) {
         assert.ok(value !== null && typeof value === 'object');
@@ -150,6 +170,19 @@ try {
     import { Format, StreamNormalizer, streamStructured, streamValidated, streamPatches, createPatchState, applyPatchBatch, select, type Snapshot } from 'tetra-stream';
     import type { CssDocument, LanguageStrategy } from 'tetra-stream';
     import { z } from 'zod';
+    import { fromSSE, fromNDJSON, createPatchState as wireState, applyPatchBatch as applyWire, select as wireSelect } from 'tetra-stream/client';
+    import { toEventStream, eventStreamResponse, ndjsonResponse } from 'tetra-stream/server';
+    const wire = wireState<{ name: string }>();
+    for await (const batch of fromSSE(eventStreamResponse(toEventStream(['{"name":"Alice"}'])))) applyWire(wire, batch);
+    const wireName = wireSelect(wire, '/name', { require: 'complete' });
+    if (wireName.status === 'complete') { const typedName: string = wireName.value; void typedName; }
+    const lines = fromNDJSON(ndjsonResponse(toEventStream(['true'])));
+    // @ts-expect-error Wire v1 excludes CSS documents.
+    wireState({ format: Format.CSS });
+    // @ts-expect-error Wire v1 excludes YAML producers.
+    toEventStream(['a: b'], { format: Format.YAML });
+    void lines;
+
     new StreamNormalizer({ format: 'yml' });
     new StreamNormalizer({ format: 'jsonl' });
     new StreamNormalizer<string[][]>({ format: 'csv' });

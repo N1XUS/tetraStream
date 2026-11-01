@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/N1XUS/tetraStream/raw/main/libs/tetra-stream/spec/patch-batch.schema.json",
+  "title": "TetraStream wire protocol v1 PatchBatch",
+  "description": "One structural wire frame. Sequence order, terminal transitions, format consistency and patch targets require stateful validation. Reader limits may further restrict accepted frames.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "sequence", "patches", "state"],
+  "properties": {
+    "format": {
+      "enum": ["json", "jsonl", "ndjson"]
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "patches": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/patch"
+      }
+    },
+    "state": {
+      "enum": ["streaming", "complete", "error"]
+    },
+    "error": {
+      "type": "string"
+    },
+    "protocol": {
+      "const": 1
+    },
+    "schema": {
+      "description": "A JSON Schema URL, object or boolean descriptor; never fetched or executed implicitly.",
+      "type": ["string", "object", "boolean"]
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/issue"
+      }
+    }
+  },
+  "$defs": {
+    "pointer": {
+      "type": "string",
+      "pattern": "^(?:/(?:[^~]|~[01])*)*$"
+    },
+    "patch": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "path", "value"],
+          "properties": {
+            "op": {
+              "const": "set"
+            },
+            "path": {
+              "$ref": "#/$defs/pointer"
+            },
+            "value": true
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "path", "value"],
+          "properties": {
+            "op": {
+              "const": "append"
+            },
+            "path": {
+              "$ref": "#/$defs/pointer"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "path"],
+          "properties": {
+            "op": {
+              "const": "remove"
+            },
+            "path": {
+              "$ref": "#/$defs/pointer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "path", "value"],
+          "properties": {
+            "op": {
+              "const": "status"
+            },
+            "path": {
+              "$ref": "#/$defs/pointer"
+            },
+            "value": {
+              "enum": ["partial", "complete", null]
+            }
+          }
+        }
+      ]
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "code", "message"],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/pointer"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "error"
+          }
+        }
+      },
+      "then": {
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "error": false
+        }
+      }
+    }
+  ]
+}

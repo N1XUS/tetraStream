@@ -13,6 +13,64 @@ TetraStream is a TypeScript library for turning an unfinished text stream into u
 
 It supports **JSON, YAML, XML, HTML, JSON Lines, CSV, TSV, and CSS**, with explicit partial/complete metadata. The parser is independent of your AI provider, transport, and UI framework.
 
+## Parser-free client and server transport (unreleased)
+
+The source branch adds `tetra-stream/client` and `tetra-stream/server`; these subpaths are not part of the published `0.2.0` package yet. Build/install the repository archive to try them before the next npm release.
+
+Keep raw model text and structured wire frames separate. The server parses model deltas once; browsers receive `WireBatch` objects containing existing `PatchBatch` operations. The client entry includes no format parsers, schema engine or third-party runtime dependencies. `npm run check:client-size` bundles every public client export and enforces an 8 kB gzip budget.
+
+Server, in a fetch-compatible handler:
+
+```ts
+import { toEventStream, eventStreamResponse } from 'tetra-stream/server';
+
+// Replace this generator with your provider's decoded text deltas.
+async function* generatedText() {
+  yield '{"customer":{"name":"Al';
+  yield 'ex"},"items":[{"price":12.5}]}';
+}
+export function POST(request: Request): Response {
+  const batches = toEventStream(generatedText(), {
+    format: 'json',
+    schema: { type: 'object' },
+    signal: request.signal,
+  });
+  return eventStreamResponse(batches, {}, { signal: request.signal });
+}
+```
+
+Browser TypeScript:
+
+```ts
+import { fromSSE, createPatchState, applyPatchBatch, select } from 'tetra-stream/client';
+
+type Order = { customer: { name: string }; items: { price: number }[] };
+// HTML: <h2 id="customer-name">Waiting…</h2>
+const heading = document.getElementById('customer-name');
+if (!heading) throw new Error('Missing #customer-name');
+const state = createPatchState<Order>();
+try {
+  const response = await fetch('/api/order', { method: 'POST' });
+  for await (const batch of fromSSE(response)) {
+    applyPatchBatch(state, batch);
+    const name = select(state, '/customer/name', { require: 'complete' });
+    if (name.status === 'complete') heading.textContent = name.value;
+    // state.issues records schema/production issues independently of completion.
+    if (state.state === 'error') console.error(state.error);
+  }
+} catch (error) {
+  console.error('Keep the last rendered value:', error);
+}
+```
+
+Use `toNDJSON` / `ndjsonResponse` on the server and `fromNDJSON` on the client for the alternative UTF-8 line transport. The terminal `complete` or `error` frame ends the stream; EOF alone never means success. Readers bound frames, reject gaps, preserve split Unicode, support `AbortSignal` and cancel unused bodies. Client application is atomic: an invalid target leaves the accumulator unchanged. The optional `{ appendOnly: true }` reducer policy rejects `remove` operations.
+
+`schema` is a serializable JSON Schema descriptor and is never fetched or executed automatically. For runtime validation, provide a separate Standard Schema `validator` option to `toEventStream`; it validates only the finished document, does not coerce or replace raw values, and emits path-scoped `issues`. Manual producers may emit issues while siblings continue. Syntax/source failures produce terminal error frames with the useful partial data preserved.
+
+For resume, retain the accumulator and pass `{ afterSequence: state.sequence }` to the reader while requesting replay using `Last-Event-ID`. Replay storage, unavailable-cursor handling and reconnect policy belong to your application. These helpers do not automatically reconnect.
+
+Read the [wire v1 specification](libs/tetra-stream/spec/README.md) and [published frame schema](libs/tetra-stream/spec/patch-batch.schema.json). JSON and JSON Lines are wire v1; other formats remain supported in process.
+
 ## Install
 
 ```sh

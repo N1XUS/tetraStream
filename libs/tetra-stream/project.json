@@ -58,6 +58,14 @@
       "options": {
         "command": "node tools/pack-library.mts"
       }
+    },
+    "check-client-size": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "cache": false,
+      "options": {
+        "command": "node tools/check-client-budget.mts"
+      }
     }
   }
 }

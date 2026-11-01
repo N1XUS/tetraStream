@@ -14,6 +14,12 @@ export type StreamPatch =
   | { readonly op: 'append'; readonly path: string; readonly value: string }
   | { readonly op: 'remove'; readonly path: string }
   | { readonly op: 'status'; readonly path: string; readonly value: Completion | null };
+/** Validation or production issue scoped to a pointer; it does not change syntactic completion. */
+export interface PathIssue {
+  readonly path: string;
+  readonly code: string;
+  readonly message: string;
+}
 export interface PatchBatch {
   readonly format: string;
   /** Starts at 1; replay batches from one parser in order. */
@@ -21,10 +27,12 @@ export interface PatchBatch {
   readonly patches: readonly StreamPatch[];
   readonly state: Snapshot['state'];
   readonly error?: string;
+  readonly issues?: readonly PathIssue[];
 }
 /** A consumer-owned mutable accumulator. Use select() for typed field access. */
 export interface PatchState<T = JSONValue | MarkupDocument | CssDocument> extends Snapshot<T> {
   sequence: number;
+  issues?: readonly PathIssue[];
 }
 
 export function createPatchState<T = JSONValue | MarkupDocument | CssDocument>({
@@ -129,6 +137,8 @@ export function applyPatchBatch<T>(state: PatchState<T>, batch: PatchBatch): Pat
       });
     }
   }
+  if (batch.issues?.length)
+    state.issues = [...(state.issues ?? []), ...structuredClone(batch.issues)];
   state.sequence = batch.sequence;
   state.state = batch.state;
   if (batch.error !== undefined) state.error = batch.error;

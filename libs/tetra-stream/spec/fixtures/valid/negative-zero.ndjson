@@ -1,0 +1,2 @@
+{"format":"json","sequence":1,"patches":[{"op":"set","path":"","value":-0},{"op":"status","path":"","value":"partial"}],"state":"streaming","protocol":1}
+{"format":"json","sequence":2,"patches":[{"op":"set","path":"","value":-0},{"op":"status","path":"","value":"complete"}],"state":"complete"}

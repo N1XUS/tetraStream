@@ -1,0 +1,2 @@
+{"format":"json","sequence":1,"patches":[{"op":"set","path":"","value":{"keep":"4","temporary":true}},{"op":"status","path":"","value":"partial"},{"op":"status","path":"/temporary","value":"complete"}],"state":"streaming","protocol":1,"schema":"https://json-schema.org/draft/2020-12/schema"}
+{"format":"json","sequence":2,"patches":[{"op":"set","path":"/keep","value":"42"},{"op":"remove","path":"/temporary"},{"op":"status","path":"/temporary","value":null},{"op":"status","path":"/keep","value":"complete"},{"op":"status","path":"","value":"complete"}],"state":"complete"}

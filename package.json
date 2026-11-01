@@ -24,7 +24,8 @@
     "serve": "nx run playground:serve",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check:size": "nx run playground:check-size"
+    "check:size": "nx run playground:check-size",
+    "check:client-size": "nx run tetra-stream:check-client-size"
   },
   "devDependencies": {
     "@nx/js": "^23.3.1",
@@ -37,6 +38,7 @@
     "@rivetjs/ui": "^0.1.0-alpha.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.6.6",
+    "ajv": "^8.20.0",
     "lucide": "^1.66.0",
     "nx": "^23.3.1",
     "prettier": "^3.9.10",

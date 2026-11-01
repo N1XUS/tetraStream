@@ -1,0 +1,3 @@
+{"format":"json","sequence":1,"patches":[{"op":"set","path":"","value":{"bio":"海🌊 u"}},{"op":"status","path":"","value":"partial"},{"op":"status","path":"/bio","value":"partial"}],"state":"streaming","protocol":1,"metadata":{"fixture":"syntax-error"},"schema":{"$schema":"https://json-schema.org/draft/2020-12/schema"}}
+{"format":"json","sequence":2,"patches":[{"op":"append","path":"/bio","value":"nfinished"}],"state":"streaming"}
+{"format":"json","sequence":3,"patches":[],"state":"error","error":"Stream ended before the JSON document was complete at offset 22"}

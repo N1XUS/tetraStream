@@ -1,0 +1,277 @@
+{
+  "version": 1,
+  "valid": [
+    {
+      "file": "valid/nested-json.ndjson",
+      "format": "json",
+      "source": "{\"name\":\"海🌊\",\"a/b~c\":[false,0,null],\"__proto__\":{\"safe\":true},\"constructor\":\"own\",\"empty\":\"\"}",
+      "terminal": "complete",
+      "producer": "StreamNormalizer.writePatch/endPatch (13 UTF-16 code unit source chunks)"
+    },
+    {
+      "file": "valid/scalar-string.ndjson",
+      "format": "json",
+      "source": "\"42 🌊\"",
+      "terminal": "complete",
+      "producer": "StreamNormalizer.writePatch/endPatch (13 UTF-16 code unit source chunks)"
+    },
+    {
+      "file": "valid/scalar-number.ndjson",
+      "format": "json",
+      "source": "-12.5e2",
+      "terminal": "complete",
+      "producer": "StreamNormalizer.writePatch/endPatch (13 UTF-16 code unit source chunks)"
+    },
+    {
+      "file": "valid/scalar-null.ndjson",
+      "format": "json",
+      "source": "null",
+      "terminal": "complete",
+      "producer": "StreamNormalizer.writePatch/endPatch (13 UTF-16 code unit source chunks)"
+    },
+    {
+      "file": "valid/jsonl-scalars.ndjson",
+      "format": "jsonl",
+      "source": "false\n0\nnull\n\"海🌊\"\n{\"a/b~c\":[1,true]}\n",
+      "terminal": "complete",
+      "producer": "StreamNormalizer.writePatch/endPatch (13 UTF-16 code unit source chunks)"
+    },
+    {
+      "file": "valid/ndjson-records.ndjson",
+      "format": "ndjson",
+      "source": "{\"name\":\"海🌊\"}\n{\"__proto__\":{\"safe\":true},\"x\":[false,0,null]}\n",
+      "terminal": "complete",
+      "producer": "StreamNormalizer.writePatch/endPatch (13 UTF-16 code unit source chunks)"
+    },
+    {
+      "file": "valid/syntax-error.ndjson",
+      "format": "json",
+      "source": "{\"bio\":\"海🌊 unfinished",
+      "terminal": "error",
+      "producer": "StreamNormalizer.writePatch/endPatch (13 UTF-16 code unit source chunks)"
+    },
+    {
+      "file": "valid/corrections.ndjson",
+      "format": "json",
+      "expected": {
+        "format": "json",
+        "data": {
+          "keep": "42"
+        },
+        "status": {
+          "": "complete",
+          "/keep": "complete"
+        },
+        "state": "complete"
+      },
+      "producer": "manual correction/removal example"
+    },
+    {
+      "file": "valid/path-issues.ndjson",
+      "format": "json",
+      "expected": {
+        "format": "json",
+        "data": {
+          "age": "42",
+          "name": "Ada"
+        },
+        "status": {
+          "": "complete",
+          "/age": "complete",
+          "/name": "complete"
+        },
+        "state": "complete"
+      },
+      "issues": [
+        {
+          "path": "/age",
+          "code": "type",
+          "message": "Expected a number; received a string."
+        },
+        {
+          "path": "/name",
+          "code": "minLength",
+          "message": "Name must contain at least two characters."
+        }
+      ],
+      "producer": "manual path issues while sibling data continues"
+    },
+    {
+      "file": "valid/negative-zero.ndjson",
+      "format": "json",
+      "source": "-0",
+      "terminal": "complete",
+      "producer": "toEventStream/toNDJSON preserving signed zero"
+    }
+  ],
+  "invalid": [
+    {
+      "file": "invalid/unknown-field.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Unknown envelope fields are forbidden."
+    },
+    {
+      "file": "invalid/protocol-version.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Only protocol version 1 is supported."
+    },
+    {
+      "file": "invalid/unsupported-format.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Wire v1 supports only json, jsonl and ndjson."
+    },
+    {
+      "file": "invalid/invalid-path.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "JSON Pointer permits only ~0 and ~1 escapes."
+    },
+    {
+      "file": "invalid/append-number.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Append values must be strings."
+    },
+    {
+      "file": "invalid/missing-value.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Set requires a value."
+    },
+    {
+      "file": "invalid/invalid-status.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Status is partial, complete or null."
+    },
+    {
+      "file": "invalid/invalid-issue.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Issues require path, code and message."
+    },
+    {
+      "file": "invalid/invalid-metadata.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Metadata must be a JSON object."
+    },
+    {
+      "file": "invalid/sequence-zero.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Sequence starts at 1."
+    },
+    {
+      "file": "invalid/sequence-start.ndjson",
+      "format": "json",
+      "phase": "transcript",
+      "reason": "The first sequence is 1."
+    },
+    {
+      "file": "invalid/sequence-gap.ndjson",
+      "format": "json",
+      "phase": "transcript",
+      "reason": "Sequence numbers are contiguous."
+    },
+    {
+      "file": "invalid/sequence-duplicate.ndjson",
+      "format": "json",
+      "phase": "transcript",
+      "reason": "A sequence cannot be applied twice."
+    },
+    {
+      "file": "invalid/format-change.ndjson",
+      "format": "json",
+      "phase": "transcript",
+      "reason": "A stream cannot change format."
+    },
+    {
+      "file": "invalid/missing-terminal.ndjson",
+      "format": "json",
+      "phase": "transcript",
+      "reason": "Transport EOF does not complete a stream."
+    },
+    {
+      "file": "invalid/append-target.ndjson",
+      "format": "json",
+      "phase": "apply",
+      "reason": "Append requires an existing string target."
+    },
+    {
+      "file": "invalid/missing-ancestor.ndjson",
+      "format": "json",
+      "phase": "apply",
+      "reason": "Set requires an existing object or array parent."
+    },
+    {
+      "file": "invalid/after-terminal.ndjson",
+      "format": "json",
+      "phase": "stateful",
+      "reason": "No frame may follow a terminal frame."
+    },
+    {
+      "file": "invalid/invalid-json.ndjson",
+      "format": "json",
+      "phase": "json",
+      "reason": "A frame must contain complete valid JSON."
+    },
+    {
+      "file": "invalid/empty.ndjson",
+      "format": "json",
+      "phase": "transcript",
+      "reason": "An empty transport has no terminal frame."
+    },
+    {
+      "file": "invalid/error-missing-message.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Error terminal frames require a string error."
+    },
+    {
+      "file": "invalid/error-on-streaming.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Only error terminal frames may contain error."
+    },
+    {
+      "file": "invalid/empty-issue-code.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Issue codes must be nonempty strings."
+    },
+    {
+      "file": "invalid/extra-patch-field.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Each patch operation has a closed shape."
+    },
+    {
+      "file": "invalid/schema-array.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "Schema descriptors are strings, objects or booleans."
+    },
+    {
+      "file": "invalid/newline-path.ndjson",
+      "format": "json",
+      "phase": "frame",
+      "reason": "A newline alone is not a root or slash-prefixed JSON Pointer."
+    },
+    {
+      "file": "invalid/complete-without-document.ndjson",
+      "format": "json",
+      "phase": "apply",
+      "reason": "A successful terminal frame requires document data."
+    },
+    {
+      "file": "invalid/array-gap.ndjson",
+      "format": "json",
+      "phase": "apply",
+      "reason": "Array assignment cannot skip indices or expand into a sparse allocation."
+    }
+  ]
+}

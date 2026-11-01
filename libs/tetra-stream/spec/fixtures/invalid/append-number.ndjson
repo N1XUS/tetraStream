@@ -1,0 +1,1 @@
+{"format":"json","sequence":1,"patches":[{"op":"append","path":"","value":42}],"state":"streaming"}

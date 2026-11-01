@@ -1,0 +1,2 @@
+{"format":"json","sequence":1,"patches":[{"op":"set","path":"","value":{"name":"Ada"}}],"state":"streaming"}
+{"format":"jsonl","sequence":2,"patches":[],"state":"complete"}
