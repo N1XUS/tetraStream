@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, readFileSync, renameSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync, readFileSync, renameSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -37,6 +37,10 @@ export function packLibrary(workspace: string = workspaceRoot): number {
   // previous complete download available to an already-running dev server.
   copyFileSync(join(artifacts, archive), `${preview}.tmp`);
   renameSync(`${preview}.tmp`, preview);
+  // Published from the canonical package spec, never maintained as a duplicate.
+  cpSync(join(library, 'spec'), join(workspace, 'apps/playground/public/protocol/v1'), {
+    recursive: true,
+  });
   return 0;
 }
 

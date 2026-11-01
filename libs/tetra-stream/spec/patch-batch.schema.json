@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/N1XUS/tetraStream/raw/main/libs/tetra-stream/spec/patch-batch.schema.json",
+  "$id": "https://tetrastream.severyn.pro/protocol/v1/patch-batch.schema.json",
   "title": "TetraStream wire protocol v1 PatchBatch",
   "description": "One structural wire frame. Sequence order, terminal transitions, format consistency and patch targets require stateful validation. Reader limits may further restrict accepted frames.",
   "type": "object",

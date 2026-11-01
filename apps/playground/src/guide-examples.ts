@@ -1,3 +1,4 @@
+import { wireServerSSE, wireClientSSE, wireServerNDJSON, wireClientNDJSON } from './wire-guide.ts';
 import { profileHtml, profileCode } from './profile-guide.ts';
 import { rxjsPipelineCode, rxjsBindingCode } from './rxjs-guide.ts';
 import { strategyExample } from './strategy-guide.ts';
@@ -21,6 +22,10 @@ const profileSource = `async function* textChunks() {
 export const exampleHtml = profileHtml;
 
 export const guideExamples = {
+  wireServerSSE,
+  wireClientSSE,
+  wireServerNDJSON,
+  wireClientNDJSON,
   rxjs: rxjsPipelineCode + '\n\n' + rxjsBindingCode,
   strategy: strategyExample,
   sse: sseAdapterCode + '\n\n' + sseUsageCode,

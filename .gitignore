@@ -8,6 +8,7 @@ artifacts/
 # Generated downloadable package; recreated by the Nx package-preview target.
 apps/playground/public/downloads/*.tgz
 apps/playground/public/downloads/*.tmp
+apps/playground/public/protocol/
 
 # Local environment, editor state, and private implementation notes.
 .env

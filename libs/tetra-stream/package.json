@@ -1,6 +1,6 @@
 {
   "name": "tetra-stream",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Progressively parse JSON, YAML, XML, HTML, JSON Lines, CSV, TSV and CSS with explicit partial and complete states and custom language strategies.",
   "type": "module",
   "license": "MIT",

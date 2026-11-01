@@ -28,6 +28,7 @@ import { Icon } from '@rivetjs/kit/icon';
 import { ArrowLeft, ArrowRight, Download, Braces, Image, Radio } from 'lucide';
 import { BrandMark } from './BrandMark';
 import { exampleHtml, guideExamples, installCommand } from './guide-examples';
+import { wireHtml, wireFrameExample } from './wire-guide.ts';
 import { sseWireExample } from './sse-guide.ts';
 import './style.css';
 import './guide.css';
@@ -36,6 +37,7 @@ const sections = [
   { id: 'installation', title: 'Install TetraStream' },
   { id: 'quickstart', title: 'Build a live user card' },
   { id: 'completion', title: 'Partial vs. complete' },
+  { id: 'wire', title: 'Use a parser-free client' },
   { id: 'transport', title: 'Connect your text stream' },
   { id: 'rxjs', title: 'Use RxJS generate' },
   { id: 'csv', title: 'Render CSV as a table' },
@@ -129,7 +131,7 @@ export default function Guide() {
       <main class="guide-page">
         <header class="guide-intro">
           <Chip variant="soft" color="accent">
-            <Icon icon={Braces} size={14} /> TypeScript · 0.2.x
+            <Icon icon={Braces} size={14} /> TypeScript · 0.3.x
           </Chip>
           <h1>
             From a text chunk
@@ -138,7 +140,7 @@ export default function Guide() {
           </h1>
           <p>
             A practical guide to TetraStream. Start with a nested user card, see exactly how values
-            reach the page, then connect your own stream.
+            reach the page, then choose browser parsing or a parser-free wire client.
           </p>
           <div class="guide-intro-facts">
             <span>Complete examples</span>
@@ -171,10 +173,13 @@ export default function Guide() {
               <Alert status="accent">
                 <Alert.Indicator />
                 <Alert.Content>
-                  <Alert.Title>An early release, ready to try.</Alert.Title>
+                  <Alert.Title>One package. Three entry points.</Alert.Title>
                   <Alert.Description>
-                    Install from npm inside your application. To test the exact build used by these
-                    demos, download the archive and run <code>npm install ./tetra-stream.tgz</code>.
+                    Install from npm inside your application. Import the core for local parsing,
+                    <code>tetra-stream/server</code> for wire producers, or{' '}
+                    <code>tetra-stream/client</code> for a browser without format parsers. To use
+                    the exact site build, download the archive and run{' '}
+                    <code>npm install ./tetra-stream.tgz</code>.
                   </Alert.Description>
                 </Alert.Content>
               </Alert>
@@ -342,14 +347,113 @@ export default function Guide() {
                 </Alert.Content>
               </Alert>
             </section>
+            <section id="wire" aria-labelledby="wire-title">
+              <div class="eyebrow">PARSE ON THE SERVER · RENDER IN THE BROWSER</div>
+              <h2 id="wire-title">A small client. Structured frames.</h2>
+              <p>
+                Use <code>tetra-stream/server</code> to parse AI text once on your backend. Send
+                ready-to-apply batches over SSE or NDJSON. Your browser imports{' '}
+                <code>tetra-stream/client</code>: about 5.2 kB gzip for all exports, with no format
+                parsers or third-party runtime dependencies.
+              </p>
+              <p>
+                <strong>Resume is application-managed.</strong> These APIs do not store or replay
+                frames and do not reconnect automatically. <code>afterSequence</code> only checks
+                the next expected cursor.
+              </p>
+              <p>
+                Each <code>WireBatch</code> carries a sequence number, JSON Pointer operations and
+                completion states. A complete transport event can contain partial document values;
+                the browser applies each batch immediately.
+              </p>
+              <Example title="index.html · wire profile" language="html" code={wireHtml} />
+              <Tabs defaultSelectedKey="wire-sse" class="guide-transport-tabs">
+                <Tabs.List aria-label="Structured wire transport">
+                  <Tabs.Tab id="wire-sse">SSE</Tabs.Tab>
+                  <Tabs.Tab id="wire-ndjson">NDJSON</Tabs.Tab>
+                </Tabs.List>
+                <Tabs.Panel id="wire-sse">
+                  <p>
+                    Expose this handler as <code>POST /api/profile/events</code> in your
+                    fetch-compatible server or framework. The generator simulates a provider.
+                    Replace it with your SDK’s decoded text deltas and pass the request’s signal to
+                    that SDK as well.
+                  </p>
+                  <Example
+                    title="server.ts · POST /api/profile/events"
+                    code={guideExamples.wireServerSSE}
+                  />
+                  <Example
+                    title="src/main.ts · parser-free SSE client"
+                    code={guideExamples.wireClientSSE}
+                  />
+                  <Example
+                    title="HTTP body · structured SSE frames"
+                    language="plaintext"
+                    code={wireFrameExample}
+                  />
+                </Tabs.Panel>
+                <Tabs.Panel id="wire-ndjson">
+                  <p>
+                    The same batches also travel as one JSON object per UTF-8 line. Expose{' '}
+                    <code>POST /api/profile/lines</code> and use the same HTML above.
+                  </p>
+                  <Example
+                    title="server.ts · POST /api/profile/lines"
+                    code={guideExamples.wireServerNDJSON}
+                  />
+                  <Example
+                    title="src/main.ts · parser-free NDJSON client"
+                    code={guideExamples.wireClientNDJSON}
+                  />
+                </Tabs.Panel>
+              </Tabs>
+              <Alert status="accent">
+                <Alert.Indicator />
+                <Alert.Content>
+                  <Alert.Title>Completion and validation are separate.</Alert.Title>
+                  <Alert.Description>
+                    <code>schema</code> is a serializable JSON Schema descriptor. For runtime
+                    checks, supply a separate Standard Schema <code>validator</code> to{' '}
+                    <code>toEventStream</code>. It validates at document EOF and records path-scoped{' '}
+                    <code>issues</code>, without coercing the received values. A syntactically
+                    complete field can still have a validation issue.
+                  </Alert.Description>
+                </Alert.Content>
+              </Alert>
+              <p>
+                Wire v1 covers <code>json</code>, <code>jsonl</code> and <code>ndjson</code>{' '}
+                documents. Other formats remain available through the core parser. The terminal{' '}
+                <code>complete</code> or <code>error</code> batch ends the stream; a closed
+                connection alone is an error.
+              </p>
+              <p>
+                Readers reject sequence gaps, bound frames, preserve Unicode across byte chunks and
+                support <code>AbortSignal</code>. Applying a malformed batch leaves the accumulator
+                unchanged. To resume, retain the accumulator, request replay with{' '}
+                <code>Last-Event-ID</code>, and pass{' '}
+                <code>{'{ afterSequence: state.sequence }'}</code> to the reader. Your application
+                supplies replay storage and reconnect policy.
+              </p>
+              <div class="guide-actions">
+                <Link href="/protocol/v1/README.md" target="_blank" rel="noopener noreferrer">
+                  Wire v1 specification
+                </Link>
+                <Link href="/protocol/v1/patch-batch.schema.json" download>
+                  Download JSON Schema
+                </Link>
+                <Link href="/protocol/v1/fixtures/index.json">Conformance fixtures</Link>
+              </div>
+            </section>
             <section id="transport" aria-labelledby="transport-title">
               <div class="eyebrow">04 · CONNECT YOUR PROVIDER</div>
-              <h2 id="transport-title">Stream plain text or SSE.</h2>
+              <h2 id="transport-title">Parse raw provider text in the browser.</h2>
               <p>
-                You do not need a finished JSON response, and you should not wait for{' '}
-                <code>response.json()</code>. Read arriving bytes, extract the generated text, and
-                feed each piece to TetraStream. The document can remain unfinished throughout the
-                connection.
+                If your backend sends raw model text instead of structured wire batches, use the
+                core parser in the browser. You do not need a finished JSON response, and you should
+                not wait for <code>response.json()</code>. Read arriving bytes, extract the
+                generated text, and feed each piece to TetraStream. The document can remain
+                unfinished throughout the connection.
               </p>
               <p>
                 For example, the first text delta can be <code>{'{"name":"Al'}</code>; it already
@@ -699,6 +803,27 @@ export default function Guide() {
                   </DescriptionList.Details>
                 </DescriptionList.Item>
                 <DescriptionList.Item>
+                  <DescriptionList.Term>
+                    <code>tetra-stream/server</code>
+                  </DescriptionList.Term>
+                  <DescriptionList.Details>
+                    <code>toEventStream</code> turns decoded text into batches. <code>toSSE</code> /{' '}
+                    <code>toNDJSON</code> encode batches; <code>eventStreamResponse</code> /{' '}
+                    <code>ndjsonResponse</code> create HTTP responses.
+                  </DescriptionList.Details>
+                </DescriptionList.Item>
+                <DescriptionList.Item>
+                  <DescriptionList.Term>
+                    <code>tetra-stream/client</code>
+                  </DescriptionList.Term>
+                  <DescriptionList.Details>
+                    <code>fromSSE</code> / <code>fromNDJSON</code> read batches;{' '}
+                    <code>createPatchState</code>, atomic <code>applyPatchBatch</code> and{' '}
+                    <code>select</code> render them without format parsers.{' '}
+                    <code>parsePatchBatch</code> validates individual frames.
+                  </DescriptionList.Details>
+                </DescriptionList.Item>
+                <DescriptionList.Item>
                   <DescriptionList.Term>Options</DescriptionList.Term>
                   <DescriptionList.Details>
                     <code>format</code> defaults to JSON. <code>maxLength</code> defaults to
@@ -737,11 +862,12 @@ export default function Guide() {
                   <Accordion.Panel>
                     {() => (
                       <Accordion.Body>
-                        Your application owns transport decoding, retries, cancellation, UI
-                        bindings, URL policies, schema choice, and side effects. TetraStream parses
-                        one ordered document. It does not repair invalid model output, remove
-                        Markdown fences, reconnect streams, or reconcile model retractions. Keep the
-                        last displayed data when a source or parse error occurs.
+                        TetraStream’s wire entry points provide SSE/NDJSON framing. Your application
+                        owns provider-envelope decoding, retries, cancellation policy, UI bindings,
+                        URL policies, schema choice, and side effects. TetraStream parses one
+                        ordered document. It does not repair invalid model output, remove Markdown
+                        fences, reconnect streams, or reconcile model retractions. Keep the last
+                        displayed data when a source or parse error occurs.
                       </Accordion.Body>
                     )}
                   </Accordion.Panel>

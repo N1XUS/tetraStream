@@ -1,5 +1,9 @@
 # TetraStream wire protocol v1
 
+**Resume is application-managed:** the reference helpers do not include frame storage, a replay endpoint or automatic reconnection. `afterSequence` validates the next expected sequence only.
+
+Canonical v1 URLs: [specification](https://tetrastream.severyn.pro/protocol/v1/README.md) · [JSON Schema](https://tetrastream.severyn.pro/protocol/v1/patch-batch.schema.json) · [fixtures](https://tetrastream.severyn.pro/protocol/v1/fixtures/index.json). For a release-pinned source snapshot, use the [0.3.0 tag](https://github.com/N1XUS/tetraStream/tree/tetra-stream%400.3.0/libs/tetra-stream/spec). This document is the canonical contract; explanatory RFC drafts must use this batch vocabulary.
+
 This document defines the public wire contract. **MUST**, **MUST NOT**, **SHOULD** and **MAY** express requirements. The existing in-process `PatchBatch` shape is also the wire frame; optional fields add protocol and application context. Wire v1 supports `json`, `jsonl` and `ndjson`. The core package continues to support its other in-process formats.
 
 [patch-batch.schema.json](./patch-batch.schema.json) is the structural [JSON Schema 2020-12](https://json-schema.org/draft/2020-12/json-schema-core) for one frame. It rejects unknown envelope, operation and issue fields. Sequence order, format consistency, terminal transitions and patch targets require a stateful consumer; passing this schema alone does not establish a valid transcript.

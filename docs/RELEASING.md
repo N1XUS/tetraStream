@@ -65,13 +65,13 @@ When publishing from an authenticated maintainer workstation, use `npm whoami` t
 Generate version/changelog changes with Nx, verify them, commit/tag the release, and publish the exact tested archive:
 
 ```sh
-npx nx release version 0.2.0 --git-commit=false --git-tag=false --stage-changes=false
-npx nx release changelog 0.2.0 --git-commit=false --git-tag=false --git-push=false --stage-changes=false
+npx nx release version 0.3.0 --git-commit=false --git-tag=false --stage-changes=false
+npx nx release changelog 0.3.0 --git-commit=false --git-tag=false --git-push=false --stage-changes=false
 npm run build
 npm test
 npm run typecheck
 npm run verify:package
-npm publish ./artifacts/tetra-stream-0.2.0.tgz --access public --tag latest
+npm publish ./artifacts/tetra-stream-0.3.0.tgz --access public --tag latest
 ```
 
 To verify a published version through the same isolated consumer, run `TETRA_PACKAGE_SPEC=tetra-stream@VERSION node tools/verify-package.mts`.
@@ -81,3 +81,5 @@ Use `--first-release` only for the initial release. After npm confirms publicati
 ## Source-only releases
 
 For a source push, verify the prepared tree and push `main` normally. Do not force-push to replace remote history. No npm token, package publication, or GitHub Release is required to share the source repository.
+
+The package preview publishes the canonical protocol files at `/protocol/v1/` on the static site. Release tags provide immutable source snapshots. Keep older protocol versions available when introducing a new wire version.

@@ -16,6 +16,10 @@ function fixture() {
     JSON.stringify({ name: 'tetra-stream', version: '3.2.1' }),
   );
   writeFileSync(join(library, 'README.md'), 'A package fixture.\n');
+  mkdirSync(join(library, 'spec/fixtures'), { recursive: true });
+  writeFileSync(join(library, 'spec/README.md'), '# Wire v1');
+  writeFileSync(join(library, 'spec/patch-batch.schema.json'), '{"type":"object"}');
+  writeFileSync(join(library, 'spec/fixtures/index.json'), '{"version":1}');
   return { workspace, library, preview: join(downloads, 'tetra-stream.tgz') };
 }
 
@@ -46,6 +50,21 @@ test('failed npm packing preserves the prior working preview', () => {
     );
     assert.notEqual(packLibrary(workspace), 0);
     assert.equal(readFileSync(preview, 'utf8'), 'previous preview');
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('package preview exposes the canonical spec and fixtures at a stable v1 URL path', () => {
+  const { workspace, library } = fixture();
+  try {
+    assert.equal(packLibrary(workspace), 0);
+    for (const name of ['README.md', 'patch-batch.schema.json', 'fixtures/index.json']) {
+      assert.deepEqual(
+        readFileSync(join(workspace, 'apps/playground/public/protocol/v1', name)),
+        readFileSync(join(library, 'spec', name)),
+      );
+    }
   } finally {
     rmSync(workspace, { recursive: true, force: true });
   }

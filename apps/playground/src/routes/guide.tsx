@@ -6,7 +6,7 @@ export const head = {
     {
       name: 'description',
       content:
-        'Complete TypeScript recipes for streaming structured data, SSE, user cards, tables, CSS, custom languages and validation.',
+        'TypeScript recipes for parser-free client/server APIs, structured SSE and NDJSON, user cards, tables, CSS and validation.',
     },
   ],
 };

@@ -26,7 +26,8 @@
         "production",
         "^production",
         "{workspaceRoot}/tools/pack-library.mts",
-        "!{projectRoot}/public/downloads/*.tgz"
+        "!{projectRoot}/public/downloads/*.tgz",
+        "!{projectRoot}/public/protocol/**"
       ]
     },
     "test": {

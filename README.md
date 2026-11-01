@@ -13,9 +13,11 @@ TetraStream is a TypeScript library for turning an unfinished text stream into u
 
 It supports **JSON, YAML, XML, HTML, JSON Lines, CSV, TSV, and CSS**, with explicit partial/complete metadata. The parser is independent of your AI provider, transport, and UI framework.
 
-## Parser-free client and server transport (unreleased)
+**Resume is application-managed:** these helpers do not store or replay frames and do not reconnect automatically. `afterSequence` only validates the expected cursor; your application supplies the replay store and endpoint.
 
-The source branch adds `tetra-stream/client` and `tetra-stream/server`; these subpaths are not part of the published `0.2.0` package yet. Build/install the repository archive to try them before the next npm release.
+## Parser-free client and server transport
+
+Version `0.3.0` includes `tetra-stream/client` and `tetra-stream/server` as public npm entry points.
 
 Keep raw model text and structured wire frames separate. The server parses model deltas once; browsers receive `WireBatch` objects containing existing `PatchBatch` operations. The client entry includes no format parsers, schema engine or third-party runtime dependencies. `npm run check:client-size` bundles every public client export and enforces an 8 kB gzip budget.
 
@@ -77,7 +79,7 @@ Read the [wire v1 specification](libs/tetra-stream/spec/README.md) and [publishe
 npm install tetra-stream
 ```
 
-An early `0.2.x` release with ESM output and TypeScript declarations. The built library supports modern browsers and Node.js 20+. See the [library documentation](libs/tetra-stream/README.md) for the full API.
+An early `0.3.x` release with ESM output and TypeScript declarations. The built library supports modern browsers and Node.js 20+. See the [library documentation](libs/tetra-stream/README.md) for the full API.
 
 ## See the difference
 
@@ -152,7 +154,7 @@ npm run pack
 Then, inside your application, install the generated archive:
 
 ```sh
-npm install /absolute/path/to/tetraStream/artifacts/tetra-stream-0.2.0.tgz
+npm install /absolute/path/to/tetraStream/artifacts/tetra-stream-0.3.0.tgz
 ```
 
 The archive contains ESM JavaScript, TypeScript declarations, package metadata, README, and license. It excludes workspace source, tests, demos, and build tools. See [the package README](libs/tetra-stream/README.md) for the full API and format contracts.

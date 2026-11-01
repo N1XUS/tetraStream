@@ -36,7 +36,8 @@
       "inputs": ["default", "{workspaceRoot}/tools/pack-library.mts"],
       "outputs": [
         "{workspaceRoot}/artifacts/tetra-stream-*.tgz",
-        "{workspaceRoot}/apps/playground/public/downloads/tetra-stream.tgz"
+        "{workspaceRoot}/apps/playground/public/downloads/tetra-stream.tgz",
+        "{workspaceRoot}/apps/playground/public/protocol/v1"
       ]
     },
     "benchmark": {
@@ -53,7 +54,8 @@
       "inputs": ["production", "{workspaceRoot}/tools/pack-library.mts"],
       "outputs": [
         "{workspaceRoot}/artifacts/tetra-stream-*.tgz",
-        "{workspaceRoot}/apps/playground/public/downloads/tetra-stream.tgz"
+        "{workspaceRoot}/apps/playground/public/downloads/tetra-stream.tgz",
+        "{workspaceRoot}/apps/playground/public/protocol/v1"
       ],
       "options": {
         "command": "node tools/pack-library.mts"

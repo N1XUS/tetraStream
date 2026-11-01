@@ -4,9 +4,11 @@ Structured data, as it arrives.
 
 Progressively parse streamed **JSON, YAML, XML, HTML, JSON Lines, CSV, TSV, and CSS** while values are still being generated. Each snapshot includes the available data and explicit `partial` / `complete` states. Written in strict TypeScript; distributed as ESM JavaScript with generated declarations.
 
-## Parser-free client and server transport (unreleased)
+**Resume is application-managed:** these helpers do not store or replay frames and do not reconnect automatically. `afterSequence` only validates the expected cursor; your application supplies the replay store and endpoint.
 
-The source branch adds `tetra-stream/client` and `tetra-stream/server`; these subpaths are not part of the published `0.2.0` package yet. Build/install the repository archive to try them before the next npm release.
+## Parser-free client and server transport
+
+Version `0.3.0` includes `tetra-stream/client` and `tetra-stream/server` as public npm entry points.
 
 Keep raw model text and structured wire frames separate. The server parses model deltas once; browsers receive `WireBatch` objects containing existing `PatchBatch` operations. The client entry includes no format parsers, schema engine or third-party runtime dependencies. `npm run check:client-size` bundles every public client export and enforces an 8 kB gzip budget.
 
@@ -68,7 +70,7 @@ Read the [wire v1 specification](spec/README.md) and [published frame schema](sp
 npm install tetra-stream
 ```
 
-This early `0.2.x` release requires a modern browser or Node.js 20+. It has no dependency on RivetJS or any UI framework. For an unreleased local build, install the generated `tetra-stream-VERSION.tgz` archive instead.
+This early `0.3.x` release requires a modern browser or Node.js 20+. It has no dependency on RivetJS or any UI framework. For a local build, install the generated `tetra-stream-VERSION.tgz` archive instead.
 
 ## Parse growing values
 

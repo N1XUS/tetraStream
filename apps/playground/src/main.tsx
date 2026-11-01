@@ -979,8 +979,8 @@ export default function App() {
               </span>
             </div>
             <p>
-              Follow the guide to build the full user card, connect your provider, stream CSV or
-              CSS, and validate finished data.
+              Follow the guide to build a user card, stream CSV or CSS, or use the 5.2 kB
+              parser-free client with server-generated SSE/NDJSON frames.
             </p>
             <Link href="/guide/" class="guide-cta">
               Read the step-by-step guide{' '}
@@ -988,6 +988,7 @@ export default function App() {
                 <Icon icon={ArrowRight} size={17} />
               </Link.Icon>
             </Link>
+            <Link href="/guide/#wire">New in 0.3: parser-free client + server API</Link>
             <p class="package-note">Install from npm · full TypeScript declarations.</p>
           </div>
           <CodeBlockRoot class="integration-window">
