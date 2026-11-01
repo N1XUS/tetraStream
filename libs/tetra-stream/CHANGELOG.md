@@ -1,3 +1,14 @@
+## 0.3.0 (2026-11-01)
+
+### 🚀 Features
+
+- publish wire API guide and stable protocol assets for 0.3.0 ([90d56ff](https://github.com/N1XUS/tetraStream/commit/90d56ff))
+- add parser-free wire client and server APIs ([36668a9](https://github.com/N1XUS/tetraStream/commit/36668a9))
+
+### ❤️ Thank You
+
+- Denys Severyn @N1XUS
+
 ## 0.2.0 (2026-10-31)
 
 ### 🚀 Features
