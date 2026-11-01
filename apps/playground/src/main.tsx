@@ -1,10 +1,9 @@
 import { signal, onCleanup } from '@rivetjs/reactivity';
-import { For, Show, clientEffect } from '@rivetjs/runtime/dom';
+import { For, Show, clientEffect, clientOnly } from '@rivetjs/runtime/dom';
 import { Button } from '@rivetjs/ui/button';
 import { Card } from '@rivetjs/ui/card';
 import { Chip } from '@rivetjs/ui/chip';
 import { Avatar } from '@rivetjs/ui/avatar';
-import { Tabs } from '@rivetjs/ui/tabs';
 import {
   ModalRoot,
   ModalBody,
@@ -16,7 +15,9 @@ import {
 import { Accordion } from '@rivetjs/ui/accordion';
 import { NativeSelect } from '@rivetjs/ui/native-select';
 import { PlaybackSlider } from './PlaybackSlider';
-import { seekStream } from './seek-stream';
+import { LazyDemoStream } from './lazy-demo-stream.ts';
+import { VisibleRegion } from './VisibleRegion';
+import { DemoPreview, InspectorPreview } from './DemoPreview';
 import { TextArea } from '@rivetjs/ui/textarea';
 import { Skeleton } from '@rivetjs/ui/skeleton';
 import { Separator } from '@rivetjs/ui/separator';
@@ -27,16 +28,6 @@ import { Link } from '@rivetjs/ui/link';
 import { Label } from '@rivetjs/ui/label';
 import { Description } from '@rivetjs/ui/description';
 import { TextField } from '@rivetjs/ui/textfield';
-import {
-  TableRoot,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableContent,
-  TableHeader,
-  TableRow,
-  TableScrollContainer,
-} from '@rivetjs/ui/table';
 import {
   CodeBlockRoot,
   CodeBlockCode,
@@ -73,7 +64,7 @@ import {
   CircleCheck,
   Package,
 } from 'lucide';
-import { StreamNormalizer, type Snapshot, type Completion } from 'tetra-stream';
+import type { Snapshot, Completion } from 'tetra-stream';
 import {
   readProfile,
   readSkillItems,
@@ -84,11 +75,35 @@ import {
 import { NestedProfileCard } from './NestedProfileCard';
 import { supportsNestedProfile } from './nested-profile.ts';
 import { examples, type ProfileFormat } from './fixtures.ts';
-import { CsvGridDemo } from './CsvGridDemo';
-import { CssStylingDemo } from './CssStylingDemo';
 import { transportLabel } from './presentation.ts';
 import { integrationExamples } from './integration-examples';
 import './style.css';
+
+// Keep below-the-fold demos and the closed inspector out of the initial module graph.
+const CsvGridDemo = clientOnly(
+  () => import('./CsvGridDemo'),
+  (module) => module.CsvGridDemo,
+  {
+    when: 'visible',
+    fallback: () => <DemoPreview kind="csv" />,
+  },
+);
+const CssStylingDemo = clientOnly(
+  () => import('./CssStylingDemo'),
+  (module) => module.CssStylingDemo,
+  {
+    when: 'visible',
+    fallback: () => <DemoPreview kind="css" />,
+  },
+);
+const ProfileInspector = clientOnly(
+  () => import('./ProfileInspector'),
+  (module) => module.ProfileInspector,
+  {
+    when: 'visible',
+    fallback: () => <InspectorPreview />,
+  },
+);
 
 interface FieldValue {
   value: unknown;
@@ -107,11 +122,6 @@ const fieldLabels: Record<string, string> = {
   projects: 'Projects array',
 };
 const inspectorRows = fields.map((id) => ({ id, label: fieldLabels[id] }));
-const inspectorColumns = [
-  { id: 'field', label: 'Field' },
-  { id: 'value', label: 'Current value' },
-  { id: 'status', label: 'Status' },
-];
 const formats: ProfileFormat[] = ['json', 'yaml', 'xml', 'html', 'ndjson', 'csv', 'tsv'];
 const formatLabels: Partial<Record<ProfileFormat, string>> = {
   ndjson: 'JSON Lines',
@@ -123,7 +133,7 @@ const text = (value: unknown): string =>
 export default function App() {
   const format = signal<ProfileFormat>('json');
   const source = signal<Record<ProfileFormat, string>>({ ...examples });
-  let parser = new StreamNormalizer({ format: 'json' });
+  const parser = new LazyDemoStream('json');
   const snapshot = signal<Snapshot>(parser.snapshot());
   const position = signal(0);
   const active = signal(false);
@@ -132,9 +142,6 @@ export default function App() {
   const editorOpen = signal(false);
   const draft = signal('');
   const avatarLoading = signal('idle');
-  const inspectorSort = signal<import('@rivetjs/cdk/collections/types').SortDescriptor | null>(
-    null,
-  );
   const avatarSource = () => readAvatarSource(snapshot());
   const avatarPending = () => isAvatarPending(snapshot());
   const avatarBusy = () =>
@@ -166,23 +173,35 @@ export default function App() {
   function pause() {
     active.set(false);
     clearTimeout(timer);
+    parser.cancelPending();
   }
   function reset(next: ProfileFormat = format()) {
     pause();
     format.set(next);
-    parser = new StreamNormalizer({ format: next });
+    parser.reset(next);
     snapshot.set(parser.snapshot());
     position.set(0);
   }
-  function seek(next: number) {
+  async function seek(next: number) {
     pause();
-    const replay = seekStream(source()[format()], format(), next);
-    parser = replay.parser;
-    position.set(replay.position);
-    snapshot.set(replay.snapshot);
+    try {
+      const replay = await parser.seek(source()[format()], next);
+      if (!replay) return;
+      position.set(replay.position);
+      snapshot.set(replay.snapshot);
+    } catch {
+      snapshot.set(parser.snapshot());
+    }
   }
-  function deliver() {
-    if (snapshot().state !== 'streaming') return;
+  async function deliver() {
+    if (snapshot().state !== 'streaming') return false;
+    try {
+      if (!(await parser.prepare())) return false;
+    } catch {
+      snapshot.set(parser.snapshot());
+      pause();
+      return false;
+    }
     const input = source()[format()];
     const next = Math.min(position() + Number(chunkSize()), input.length);
     const chunk = input.slice(position(), next);
@@ -196,12 +215,14 @@ export default function App() {
     } catch {
       snapshot.set(parser.snapshot());
       pause();
+      return false;
     }
+    return true;
   }
-  function tick() {
+  async function tick() {
     if (!active()) return;
-    deliver();
-    if (active()) timer = setTimeout(tick, 75 / Number(speed()));
+    const delivered = await deliver();
+    if (delivered && active()) timer = setTimeout(tick, 75 / Number(speed()));
   }
   function togglePlay() {
     if (active()) {
@@ -220,9 +241,10 @@ export default function App() {
     if (!active()) togglePlay();
     document.getElementById('play')?.focus({ preventScroll: true });
   }
-  function endEarly() {
+  async function endEarly() {
     pause();
     try {
+      if (!(await parser.prepare())) return;
       snapshot.set(parser.end());
     } catch {
       snapshot.set(parser.snapshot());
@@ -241,7 +263,7 @@ export default function App() {
     document.addEventListener('visibilitychange', visibility);
     return () => document.removeEventListener('visibilitychange', visibility);
   });
-  onCleanup(() => clearTimeout(timer));
+  onCleanup(pause);
 
   function FieldBadge(props: { name: string }) {
     const status = () => profile()[props.name].status;
@@ -856,112 +878,16 @@ export default function App() {
                         </NativeSelect>
                       </div>
                     </div>
-                    <Tabs defaultSelectedKey="fields" class="inspector-tabs">
-                      <Tabs.List aria-label="Data inspector">
-                        <Tabs.Tab id="fields">
-                          Field status{' '}
-                          <span id="field-count">
-                            {completeCount()}/{activeFields().length}
-                          </span>
-                        </Tabs.Tab>
-                        <Tabs.Tab id="data">Parsed data</Tabs.Tab>
-                      </Tabs.List>
-                      <Tabs.Panel id="fields">
-                        <TableRoot class="inspector-table">
-                          <TableScrollContainer>
-                            <TableContent
-                              aria-label="Profile field status"
-                              sortDescriptor={inspectorSort}
-                            >
-                              <TableHeader columns={inspectorColumns}>
-                                {(column: (typeof inspectorColumns)[number]) => (
-                                  <TableColumn
-                                    id={column.id}
-                                    isRowHeader={column.id === 'field'}
-                                    textValue={column.label}
-                                  >
-                                    {column.label}
-                                  </TableColumn>
-                                )}
-                              </TableHeader>
-                              <TableBody items={profileInspectorRows}>
-                                {(row: (typeof inspectorRows)[number]) => (
-                                  <TableRow
-                                    id={row.id}
-                                    textValue={row.label}
-                                    columns={inspectorColumns}
-                                  >
-                                    {(column: (typeof inspectorColumns)[number]) => (
-                                      <TableCell
-                                        id={`${row.id}-${column.id}`}
-                                        textValue={
-                                          column.id === 'field'
-                                            ? row.label
-                                            : column.id === 'value'
-                                              ? text(profile()[row.id].value) || 'Waiting for data'
-                                              : profile()[row.id].status
-                                        }
-                                      >
-                                        <Show
-                                          when={column.id === 'field'}
-                                          fallback={
-                                            <Show
-                                              when={column.id === 'value'}
-                                              fallback={
-                                                <Chip
-                                                  size="sm"
-                                                  variant="soft"
-                                                  color={
-                                                    profile()[row.id].status === 'partial'
-                                                      ? 'warning'
-                                                      : profile()[row.id].status === 'complete'
-                                                        ? 'success'
-                                                        : 'default'
-                                                  }
-                                                >
-                                                  {profile()[row.id].status === 'pending'
-                                                    ? done()
-                                                      ? 'Not included'
-                                                      : 'Waiting'
-                                                    : profile()[row.id].status === 'partial'
-                                                      ? 'Partial'
-                                                      : 'Complete'}
-                                                </Chip>
-                                              }
-                                            >
-                                              <span>
-                                                {profile()[row.id].status === 'pending'
-                                                  ? done()
-                                                    ? 'Not included in response'
-                                                    : 'Waiting for data'
-                                                  : text(profile()[row.id].value)}
-                                              </span>
-                                            </Show>
-                                          }
-                                        >
-                                          {row.label}
-                                        </Show>
-                                      </TableCell>
-                                    )}
-                                  </TableRow>
-                                )}
-                              </TableBody>
-                            </TableContent>
-                          </TableScrollContainer>
-                        </TableRoot>
-                      </Tabs.Panel>
-                      <Tabs.Panel id="data">
-                        <CodeBlockRoot>
-                          <CodeBlockCode
-                            id="normalized-data"
-                            code={() => JSON.stringify(snapshot(), null, 2)}
-                            language="json"
-                            wrap
-                            aria-label="Parsed profile snapshot"
-                          />
-                        </CodeBlockRoot>
-                      </Tabs.Panel>
-                    </Tabs>
+                    <VisibleRegion fallback={() => <InspectorPreview />}>
+                      {() => (
+                        <ProfileInspector
+                          snapshot={snapshot}
+                          rows={profileInspectorRows}
+                          completeCount={completeCount}
+                          fieldCount={() => activeFields().length}
+                        />
+                      )}
+                    </VisibleRegion>
                     <p class="advanced-note">
                       Field completion describes syntax. Validate against your application schema
                       before taking actions. Markup attributes appear after the opening tag is
@@ -974,8 +900,12 @@ export default function App() {
           </Accordion>
         </section>
 
-        <CsvGridDemo />
-        <CssStylingDemo />
+        <VisibleRegion fallback={() => <DemoPreview kind="csv" />}>
+          {() => <CsvGridDemo />}
+        </VisibleRegion>
+        <VisibleRegion fallback={() => <DemoPreview kind="css" />}>
+          {() => <CssStylingDemo />}
+        </VisibleRegion>
 
         <section id="how-it-works" class="explanation" aria-labelledby="how-title">
           <div class="explanation-intro">

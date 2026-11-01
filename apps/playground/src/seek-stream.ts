@@ -1,5 +1,7 @@
 import { StreamNormalizer, type FormatName as Format } from 'tetra-stream';
 
+export { StreamNormalizer };
+
 /** Rebuild from the received prefix so rewinding never leaves future data behind. */
 export function seekStream(source: string, format: Format, requestedPosition: number) {
   const position = Math.min(

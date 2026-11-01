@@ -1261,3 +1261,13 @@ main {
   font-size: 11px;
   color: var(--muted);
 }
+
+.deferred-demo {
+  min-height: 640px;
+}
+.deferred-demo-placeholder {
+  height: 480px;
+}
+.deferred-inspector-placeholder {
+  height: 240px;
+}

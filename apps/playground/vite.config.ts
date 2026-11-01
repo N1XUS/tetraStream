@@ -8,6 +8,7 @@ export default defineConfig(({ isSsrBuild }) => ({
   plugins: [
     rivetRouter({
       mode: 'static',
+      locales: ['en-US'],
       adapter: 'cloudflare',
       trailingSlash: 'always',
       styles: ['src/style.css'],

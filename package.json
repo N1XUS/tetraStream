@@ -23,7 +23,8 @@
     "benchmark": "nx run tetra-stream:benchmark",
     "serve": "nx run playground:serve",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check:size": "nx run playground:check-size"
   },
   "devDependencies": {
     "@nx/js": "^23.3.1",

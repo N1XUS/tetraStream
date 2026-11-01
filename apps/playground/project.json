@@ -60,6 +60,14 @@
         "command": "wrangler dev --config ../../dist/apps/playground/cloudflare/wrangler.json --ip 127.0.0.1 --port 4173",
         "cwd": "apps/playground"
       }
+    },
+    "check-size": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "cache": false,
+      "options": {
+        "command": "node tools/check-homepage-budget.mts"
+      }
     }
   }
 }
